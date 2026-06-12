@@ -4,9 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>世界的下落 — 還沒有結局的大事</title>
-<meta name="description" content="推開一扇門，地上散著還沒辦完的卷宗。記錄那些還沒有結局、卻漸漸被遺忘的世界大事。">
+<meta name="description" content="推開一扇門，地上散著還沒寫完的書。記錄那些還沒有結局、卻漸漸被遺忘的世界大事。">
 <meta property="og:title" content="世界的下落">
-<meta property="og:description" content="有些事沒有結局，只是沒有人再問起。推門進來，撿起一份卷宗。">
+<meta property="og:description" content="有些事沒有結局，只是沒有人再問起。推門進來，撿起一本書。">
 <meta property="og:type" content="website">
 <style>
   :root{ --ink:#e8ddc8; --dim:#8a7a5f; }
@@ -27,15 +27,10 @@
     justify-content:center;gap:22px;transition:opacity 1.4s ease;
     text-shadow:0 0 24px rgba(0,0,0,.9);cursor:pointer;padding:0 24px;text-align:center}
   #intro.gone{opacity:0;pointer-events:none}
-  #intro .stamp{font-size:11px;letter-spacing:.3em;color:#564a38;border:1px solid #3a3022;
-    border-radius:2px;padding:5px 12px}
   #intro h1{font-size:clamp(40px,8vw,72px);font-weight:600;letter-spacing:.4em;text-indent:.4em;color:#f0e4ca}
   body[data-lang="en"] #intro h1{font-size:clamp(26px,6vw,54px);letter-spacing:.18em;text-indent:.18em}
-  #intro .line{font-size:15px;letter-spacing:.18em;color:#b3a382;line-height:2}
+  #intro .line{font-size:15px;letter-spacing:.18em;color:#b3a382;line-height:2;min-height:4em}
   body[data-lang="en"] #intro .line{letter-spacing:.06em}
-  #intro p.go{font-size:13px;letter-spacing:.4em;text-indent:.4em;color:var(--dim);
-    animation:breathe 3s ease-in-out infinite;margin-top:8px}
-  body[data-lang="en"] #intro p.go{letter-spacing:.22em;text-indent:.22em}
   @keyframes breathe{0%,100%{opacity:.45}50%{opacity:.95}}
 
   #hint{position:fixed;left:0;right:0;bottom:24px;text-align:center;font-size:12px;
@@ -104,10 +99,8 @@
 </div>
 
 <div id="intro">
-  <div class="stamp">WHEREABOUTS · 世界的下落</div>
   <h1 id="intro-title">世界的下落</h1>
-  <div class="line" id="intro-line"></div>
-  <p class="go" id="intro-go"></p>
+  <div class="line"><span id="intro-line1"></span><br><span id="intro-line2"></span></div>
 </div>
 <div id="hint"></div>
 <div id="folio"></div>
@@ -137,7 +130,9 @@ const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const FINE = matchMedia('(pointer: fine)').matches;
 const PI = Math.PI;
 const DAY = 86400000;
-const TODAY = new Date();
+/* 以本地時區的「今天 00:00」為基準，數字在使用者的午夜整點換日 */
+const TODAY = (()=>{const t=new Date();return new Date(t.getFullYear(),t.getMonth(),t.getDate());})();
+const parseDate = s=>{const [y,m,d]=String(s).split('-').map(Number);return new Date(y,(m||1)-1,d||1);};
 
 /* ---------------- 語系 ---------------- */
 let LANG = localStorage.getItem('wb-lang') ||
@@ -145,16 +140,15 @@ let LANG = localStorage.getItem('wb-lang') ||
 let pendingLang = null;
 const STRINGS = {
   introTitle:   {zh:'世界的下落', en:'WHEREABOUTS'},
-  introLine:    {zh:'有些事沒有結局，<br>只是沒有人再問起。',
-                 en:'Some things never got an ending —<br>people just stopped asking.'},
-  introGo:      {zh:'敲 一 下 ， 推 門 進 去', en:'Knock, and step inside'},
-  hintChoose:   {zh:n=>`地上散著 ${n} 份卷宗 · 撿起一份`, en:n=>`${n} case files lie on the floor · pick one up`},
+  introLine1:   {zh:'有些事沒有結局，', en:'Some things never got an ending,'},
+  introLine2:   {zh:'只是沒有人再問起。', en:'people just stopped asking.'},
+  hintChoose:   {zh:n=>`地上散著 ${n} 本書 · 撿起一本`, en:n=>`${n} books lie on the floor · pick one up`},
   hintRead:     {zh:'點擊右側翻頁 · 左側回翻', en:'Tap right to turn the page · left to go back'},
   hintReadPort: {zh:'點右側往下讀 · 左側回看', en:'Tap right to read on · left to look back'},
-  loading:      {zh:'卷宗整理中…', en:'Preparing the files…'},
-  loadFail:     {zh:e=>`讀取卷宗失敗（${e}）— 原始資料：events.yaml`, en:e=>`Failed to load the files (${e}) — raw data: events.yaml`},
+  loading:      {zh:'書房還在整理…', en:'Tidying the room…'},
+  loadFail:     {zh:e=>`讀取失敗（${e}）— 原始資料：events.yaml`, en:e=>`Failed to load (${e}) — raw data: events.yaml`},
   folioCover:   {zh:'— 封面 —', en:'— Cover —'},
-  folioEnd:     {zh:'— 卷宗末頁 —', en:'— Last page —'},
+  folioEnd:     {zh:'— 末頁 —', en:'— Last page —'},
   putBack:      {zh:'放 回 地 上', en:'Put it back'},
   chipSrc:      {zh:n=>`附件 · ${n} ↗`, en:n=>`Source · ${n} ↗`},
   chipVideo:    {zh:'▶ 影像附件', en:'▶ Video'},
@@ -170,12 +164,12 @@ const STRINGS = {
   catClosed:    {zh:'已結案', en:'closed'},
   srcLabel:     {zh:n=>`附件 · 資料來源：${n}`, en:n=>`Source · ${n}`},
   videoNote:    {zh:'▶ 本頁有影像附件（畫面下方可播放）', en:'▶ Video attachment — playable below'},
-  stuckLabel:   {zh:'目前卡在', en:'Stuck on'},
+  stuckLabel:   {zh:'故事停在這裡', en:'The story stops here'},
   closedStamp:  {zh:'結案 · CLOSED', en:'CLOSED'},
-  endTitle:     {zh:'這份卷宗先到這裡。', en:'This file ends here, for now.'},
-  endOpen:      {zh:'放回地上，或撿起下一份。', en:'Put it back, or pick up another.'},
+  endTitle:     {zh:'這本書，先寫到這裡。', en:'This book ends here, for now.'},
+  endOpen:      {zh:'放回地上，或撿起下一本。', en:'Put it back, or pick up another.'},
   endClosed:    {zh:'它已經有了下落。', en:'It has found its ending.'},
-  pendingTitle: {zh:'這份卷宗還在整理中。', en:'This file is still being prepared.'},
+  pendingTitle: {zh:'這本書還在整理中。', en:'This book is still being written.'},
   pendingSub:   {zh:'改天再來看看它的下落。', en:'Come back another day to see.'},
 };
 function S(k,...a){const v=STRINGS[k][LANG];return typeof v==='function'?v(...a):v;}
@@ -195,7 +189,7 @@ const CATS = {
 /* ---------------- 事件資料（events.yaml） ---------------- */
 let EVENTS = [];
 let DATA_ERR = null;
-const days=(a,b)=>Math.max(0,Math.floor((b-new Date(a))/DAY));
+const days=(a,b)=>Math.max(0,Math.round((b-parseDate(a))/DAY));
 async function loadData(){
   try{
     const res=await fetch('events.yaml',{cache:'no-cache'});
@@ -211,7 +205,7 @@ async function loadData(){
       outcome:e.outcome||null,
     }));
     EVENTS.forEach(e=>{
-      e.noteDays = days(e.start, e.status==='closed'&&e.outcome?new Date(e.outcome.date):TODAY);
+      e.noteDays = days(e.start, e.status==='closed'&&e.outcome?parseDate(e.outcome.date):TODAY);
       e.staleDays = days(e.last, TODAY);
       e.dust = e.staleDays>=365?4:e.staleDays>=180?3:e.staleDays>=90?2:e.staleDays>=30?1:0;
     });
@@ -236,9 +230,8 @@ let engine;
 try{
   engine=new BABYLON.Engine(canvas,true,{stencil:false});
 }catch(err){
-  document.getElementById('intro-line').innerHTML=
-    '這個頁面需要 WebGL。<br>This page needs WebGL. — <a href="events.yaml" style="color:#cdbd99">events.yaml</a>';
-  document.getElementById('intro-go').textContent='';
+  document.getElementById('intro-line1').innerHTML=
+    '這個頁面需要 WebGL。This page needs WebGL. — <a href="events.yaml" style="color:#cdbd99">events.yaml</a>';
   throw err;
 }
 engine.setHardwareScalingLevel(1/Math.min(devicePixelRatio,2));
@@ -247,7 +240,7 @@ scene.useRightHandedSystem=true;
 scene.clearColor=BABYLON.Color4.FromHexString('#0b0805FF');
 scene.fogMode=BABYLON.Scene.FOGMODE_LINEAR;
 scene.fogColor=BABYLON.Color3.FromHexString('#0b0805');
-scene.fogStart=12; scene.fogEnd=36;
+scene.fogStart=14; scene.fogEnd=44;
 
 const camera=new BABYLON.UniversalCamera('cam',new BABYLON.Vector3(0,7.6,18),scene);
 camera.fov=46*PI/180; camera.minZ=.1; camera.maxZ=90;
@@ -255,15 +248,15 @@ camera.fov=46*PI/180; camera.minZ=.1; camera.maxZ=90;
 const candle=new BABYLON.PointLight('candle',new BABYLON.Vector3(3.4,7.5,4.2),scene);
 candle.diffuse=BABYLON.Color3.FromHexString('#ffb45e');
 candle.specular=BABYLON.Color3.FromHexString('#ffd9a0').scale(.3);
-candle.range=26; candle.intensity=.75;
+candle.range=30; candle.intensity=.98;
 const moon=new BABYLON.PointLight('moon',new BABYLON.Vector3(-7,9,-10),scene);
 moon.diffuse=BABYLON.Color3.FromHexString('#6a7fa8');
 moon.specular=BABYLON.Color3.Black();
-moon.range=44; moon.intensity=.28;
+moon.range=44; moon.intensity=.37;
 const hemi=new BABYLON.HemisphericLight('amb',new BABYLON.Vector3(0,1,0),scene);
 hemi.diffuse=BABYLON.Color3.FromHexString('#574736');
 hemi.groundColor=BABYLON.Color3.FromHexString('#241a10');
-hemi.intensity=.4;
+hemi.intensity=.52;
 
 /* ---------------- 共用：DynamicTexture / 紙張 / 斷行 ---------------- */
 function newTex(w=PXW,h=PXH){
@@ -531,25 +524,6 @@ function coverFace(ev){
   tex.update();
   return tex;
 }
-function floorCover(ev){            // 地上的封皮：無標題、無圖樣（天數寫在便條紙上）
-  const W=440,H=590;
-  const cat=CATS[ev.cat];
-  const tex=newTex(W,H), ctx=tex.getContext();
-  const g=ctx.createLinearGradient(0,0,W,H);
-  g.addColorStop(0,cat.leather[0]);g.addColorStop(1,cat.leather[1]);
-  ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
-  for(let i=0;i<400;i++){
-    ctx.fillStyle=Math.random()<.5?'rgba(0,0,0,.08)':'rgba(255,230,190,.03)';
-    ctx.fillRect(Math.random()*W,Math.random()*H,1.4,1.4);
-  }
-  ctx.strokeStyle=cat.accent;ctx.globalAlpha=.5;ctx.lineWidth=2;
-  ctx.strokeRect(26,26,W-52,H-52);
-  ctx.globalAlpha=.25;ctx.lineWidth=1;
-  ctx.strokeRect(40,40,W-80,H-80);
-  ctx.globalAlpha=1;
-  tex.update();
-  return tex;
-}
 function noteTexOf(ev){             // 便條紙：擱置天數
   const W=256,H=256;
   const tex=newTex(W,H), ctx=tex.getContext();
@@ -797,7 +771,7 @@ function buildPage(name,x0,x1,H,segX,segZ){
   const root=new BABYLON.TransformNode('shelf',scene);
   root.position.set(2.2,0,-9.2);
   const woodM=new BABYLON.StandardMaterial('shelfM',scene);
-  woodM.diffuseColor=BABYLON.Color3.FromHexString('#2a1a0c');
+  woodM.diffuseColor=BABYLON.Color3.FromHexString('#3a2410');
   woodM.specularColor=new BABYLON.Color3(.04,.03,.02);
   const mk=(w,h,d,x,y,z)=>{
     const b=BABYLON.MeshBuilder.CreateBox('s',{width:w,height:h,depth:d},scene);
@@ -807,7 +781,7 @@ function buildPage(name,x0,x1,H,segX,segZ){
   mk(8.8,6.2,.1,0,3.1,-.6);
   mk(8.6,.14,1.15,0,.4,0); mk(8.6,.14,1.15,0,2.35,0);
   mk(8.6,.14,1.15,0,4.3,0); mk(8.6,.14,1.15,0,6.2,0);
-  const spineCols=['#5a3a2a','#3e4a3a','#2e3a4e','#5a4a2a','#4a2e3a','#3a3a3a'].map(c=>{
+  const spineCols=['#6e4836','#4c5c48','#3a4a64','#6e5a34','#5c3a4a','#4a4a4a'].map(c=>{
     const m=new BABYLON.StandardMaterial('sp'+c,scene);
     m.diffuseColor=BABYLON.Color3.FromHexString(c);
     m.specularColor=new BABYLON.Color3(.05,.04,.03);
@@ -891,15 +865,15 @@ function buildFloor(){
     cover.position.y=TH2+0.004;
     cover.parent=root;
     const cm=new BABYLON.StandardMaterial('cm'+i,scene);
-    cm.diffuseTexture=floorCover(ev);
+    cm.diffuseTexture=coverFace(ev);          // 地上就顯示完整封面
     cm.diffuseColor=BABYLON.Color3.Lerp(BABYLON.Color3.White(),grey,dustMix);
     cm.specularColor=new BABYLON.Color3(.08,.07,.05);
     cm.backFaceCulling=false;
     cover.material=cm;
-    // 便條紙
-    const note=buildPage('nt'+i,-0.5,0.5,1.0,1,1);
-    note.position.set((PW+0.16)/2+0.25,TH2+0.012,0.32);
-    note.rotation.y=.12+(Math.random()-.5)*.15;
+    // 便條紙：貼在封面中央偏下，蓋住部分封面，但天數最醒目
+    const note=buildPage('nt'+i,-0.7,0.7,1.4,1,1);
+    note.position.set((PW+0.16)/2,TH2+0.012,0.5);
+    note.rotation.y=.08+(Math.random()-.5)*.12;
     note.parent=root;
     const nm=new BABYLON.StandardMaterial('nm'+i,scene);
     nm.diffuseTexture=noteTexOf(ev);
@@ -907,7 +881,7 @@ function buildFloor(){
     nm.backFaceCulling=false;
     note.material=nm;
     box.metadata=cover.metadata=note.metadata={bookIndex:i};
-    floorBooks.push({root,noteMat:nm,ev});
+    floorBooks.push({root,coverMat:cm,noteMat:nm,ev});
   });
 }
 const pickPredicate=m=>m.metadata&&m.metadata.bookIndex!==undefined;
@@ -939,10 +913,10 @@ matL.backFaceCulling=matR.backFaceCulling=false;
 const pageL=buildPage('pageL',-PW,0,PH,1,1); pageL.parent=rig; pageL.material=matL;
 const pageR=buildPage('pageR', 0,PW,PH,1,1); pageR.parent=rig; pageR.material=matR;
 /* 手上書封面上的便條紙（撕掉動畫用） */
-const rigNote=buildPage('rigNote',-0.5,0.5,1.0,1,1);
+const rigNote=buildPage('rigNote',-0.7,0.7,1.4,1,1);
 rigNote.parent=rig;
-rigNote.position.set(PW*0.55,THICK+0.02,0.32);
-rigNote.rotation.y=.1;
+rigNote.position.set(PW*0.5,THICK+0.02,0.5);
+rigNote.rotation.y=.08;
 const rigNoteMat=new BABYLON.StandardMaterial('rigNoteM',scene);
 rigNoteMat.specularColor=BABYLON.Color3.Black();
 rigNoteMat.backFaceCulling=false;
@@ -977,13 +951,14 @@ uniform vec3 uLightPos; uniform vec3 uLightColor; uniform float uLightInt;
 void main(){
   vec3 n=normalize(vNorm);
   vec3 base;
-  if(gl_FrontFacing){ base=texture2D(uFront,vUv).rgb; }
-  else{ base=texture2D(uBack,vec2(1.0-vUv.x,vUv.y)).rgb; n=-n; }
+  // RH 場景下 gl_FrontFacing 與幾何 +y 面相反：翻起時先看到本頁正面、過半後看到背面（不鏡像穿幫）
+  if(gl_FrontFacing){ base=texture2D(uBack,vec2(1.0-vUv.x,vUv.y)).rgb; n=-n; }
+  else{ base=texture2D(uFront,vUv).rgb; }
   vec3 Ld=uLightPos-vWorld;
   float dist=length(Ld); Ld/=dist;
   float diff=max(dot(n,Ld),0.0);
   float att=max(0.0,1.0-dist/26.0);
-  vec3 lit=base*(0.32+uLightColor*diff*uLightInt*1.5*att);
+  vec3 lit=base*(0.42+uLightColor*diff*uLightInt*1.5*att);
   lit*=mix(0.74,1.0,smoothstep(0.0,0.16,vUv.x));
   lit*=mix(1.0,0.92,smoothstep(0.75,1.0,vUv.x));
   gl_FragColor=vec4(lit,1.0);
@@ -1006,6 +981,7 @@ flipPage.setEnabled(false);
 
 /* ---------------- 狀態 ---------------- */
 let state='INTRO';
+let introStage=0, typing=null;        // 序言：0 標題 → 1 第一句 → 2 第二句 → 走入
 let activeBook=-1;
 let faces=[], cur=0, flipping=false, flipAnim=null;
 let pickupAnim=null, tearAnim=null, walkT=-1;
@@ -1085,8 +1061,9 @@ function applyDom(){
   document.documentElement.lang=LANG==='zh'?'zh-Hant':'en';
   document.body.dataset.lang=LANG;
   document.getElementById('intro-title').textContent=S('introTitle');
-  document.getElementById('intro-line').innerHTML=S('introLine');
-  document.getElementById('intro-go').textContent=S('introGo');
+  if(typing)finishTyping();
+  document.getElementById('intro-line1').textContent=introStage>=1?S('introLine1'):'';
+  document.getElementById('intro-line2').textContent=introStage>=2?S('introLine2'):'';
   downBtn.textContent=S('putBack');
   vlink.textContent=S('vOpen');
   document.getElementById('vclose').textContent=S('vClose');
@@ -1098,11 +1075,14 @@ function setLang(l){
   LANG=l;
   localStorage.setItem('wb-lang',l);
   applyDom();
-  // 重畫地上的便條紙
+  // 重畫地上的封面與便條紙
   for(const fb of floorBooks){
-    const old=fb.noteMat.diffuseTexture;
+    const oldN=fb.noteMat.diffuseTexture;
     fb.noteMat.diffuseTexture=noteTexOf(fb.ev);
-    if(old)old.dispose();
+    if(oldN)oldN.dispose();
+    const oldC=fb.coverMat.diffuseTexture;
+    fb.coverMat.diffuseTexture=coverFace(fb.ev);
+    if(oldC)oldC.dispose();
   }
   // 清掉所有已生成的頁面（換語言要重畫）
   for(const k of Object.keys(faceCache)){
@@ -1149,7 +1129,7 @@ function readCamTargets(){
 function chooseCamTargets(){
   const tanV=Math.tan(camera.fov/2), tanH=tanV*aspect();
   const d=Math.max(7.4/tanH, 3.0/tanV, 7.6);
-  const dir=new BABYLON.Vector3(0,.62,1).normalize();
+  const dir=new BABYLON.Vector3(Math.sin(viewYaw),.62+viewPitch,Math.cos(viewYaw)).normalize();
   tgtPos.set(0,0.6,1.2).addInPlace(dir.scale(d));
   tgtLook.set(0,0.4,0.8);
 }
@@ -1160,6 +1140,29 @@ function startWalk(){
   state='WALK';
   document.getElementById('intro').classList.add('gone');
   walkT=0;
+}
+/* 序言：點一下打一句（打字機），打完再點才前進 */
+function typeText(el,text){
+  el.textContent='';
+  let i=0;
+  typing={el,text,timer:setInterval(()=>{
+    i++;
+    el.textContent=text.slice(0,i);
+    if(i>=text.length){clearInterval(typing.timer);typing=null;}
+  },REDUCED?0:(LANG==='en'?40:90))};
+  if(REDUCED)finishTyping();
+}
+function finishTyping(){
+  if(!typing)return;
+  clearInterval(typing.timer);
+  typing.el.textContent=typing.text;
+  typing=null;
+}
+function introTap(){
+  if(typing){finishTyping();return;}          // 打到一半：先補完整句
+  if(introStage===0){introStage=1;typeText(document.getElementById('intro-line1'),S('introLine1'));}
+  else if(introStage===1){introStage=2;typeText(document.getElementById('intro-line2'),S('introLine2'));}
+  else startWalk();
 }
 function startPickup(i){
   state='PICKUP';
@@ -1182,8 +1185,8 @@ function startTear(){
   state='TEAR';
   rigNote.setEnabled(true);
   rigNoteMat.alpha=1;
-  rigNote.position.set(PW*0.55,THICK+0.02,0.32);
-  rigNote.rotation.set(0,.1,0);
+  rigNote.position.set(PW*0.5,THICK+0.02,0.5);
+  rigNote.rotation.set(0,.08,0);
   tearAnim={t0:performance.now()+350,dur:850};   // 停 0.35s 再撕
   tear_sound_pending=true;
 }
@@ -1305,10 +1308,23 @@ function footstep(){
 
 /* ---------------- 互動 ---------------- */
 const mouse={x:0,y:0};
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 let hovered=null;
+let viewYaw=0, viewPitch=0;          // 房間內拖曳視角
+let lookDrag=null;
 addEventListener('pointermove',e=>{
   mouse.x=(e.clientX/innerWidth)*2-1;
   mouse.y=(e.clientY/innerHeight)*2-1;
+  if(lookDrag&&(state==='CHOOSE'||state==='WAITDATA')){
+    const dx=e.clientX-lookDrag.x, dy=e.clientY-lookDrag.y;
+    if(Math.abs(e.clientX-lookDrag.x0)+Math.abs(e.clientY-lookDrag.y0)>8)lookDrag.moved=true;
+    if(lookDrag.moved){
+      viewYaw  =clamp(viewYaw  - dx*.0032, -.65,.65);
+      viewPitch=clamp(viewPitch+ dy*.0022, -.22,.40);
+      lookDrag.x=e.clientX;lookDrag.y=e.clientY;
+    }
+    return;
+  }
   if(state==='CHOOSE'&&FINE){
     const hit=scene.pick(scene.pointerX,scene.pointerY,pickPredicate);
     const idx=hit&&hit.hit?hit.pickedMesh.metadata.bookIndex:-1;
@@ -1321,17 +1337,26 @@ addEventListener('pointermove',e=>{
 addEventListener('pointerdown',e=>{
   if(vmodal.classList.contains('show'))return;
   if(e.target.closest&&e.target.closest('.chip,#down,#lang'))return;
-  if(state==='INTRO'){startWalk();return;}
-  if(state==='CHOOSE'){
-    const hit=scene.pick(scene.pointerX,scene.pointerY,pickPredicate);
-    if(hit&&hit.hit)startPickup(hit.pickedMesh.metadata.bookIndex);
+  if(state==='INTRO'){introTap();return;}
+  if(state==='CHOOSE'||state==='WAITDATA'){
+    lookDrag={x:e.clientX,y:e.clientY,x0:e.clientX,y0:e.clientY,moved:false};
     return;
   }
   if(state==='READ'){readTap(e.clientX>innerWidth/2);}
 });
+addEventListener('pointerup',e=>{
+  if(!lookDrag)return;
+  const wasDrag=lookDrag.moved;
+  lookDrag=null;
+  if(wasDrag||state!=='CHOOSE')return;
+  if(vmodal.classList.contains('show'))return;
+  const hit=scene.pick(scene.pointerX,scene.pointerY,pickPredicate);
+  if(hit&&hit.hit)startPickup(hit.pickedMesh.metadata.bookIndex);
+});
+addEventListener('pointercancel',()=>{lookDrag=null;});
 addEventListener('keydown',e=>{
   if(vmodal.classList.contains('show')){if(e.key==='Escape')closeVideo();return;}
-  if(state==='INTRO'&&(e.key===' '||e.key==='Enter')){startWalk();return;}
+  if(state==='INTRO'&&(e.key===' '||e.key==='Enter')){introTap();return;}
   if(state!=='READ')return;
   if(e.key==='ArrowRight'||e.key===' ')readTap(true);
   if(e.key==='ArrowLeft')readTap(false);
@@ -1344,7 +1369,7 @@ addEventListener('resize',()=>engine.resize());
 let t0=performance.now(), lastStepPhase=1, chipFrameKey='';
 engine.runRenderLoop(()=>{
   const t=(performance.now()-t0)/1000;
-  const fl=.75+Math.sin(t*7.3)*.05+Math.sin(t*13.7+1.3)*.035+Math.sin(t*2.1)*.025;
+  const fl=.98+Math.sin(t*7.3)*.065+Math.sin(t*13.7+1.3)*.045+Math.sin(t*2.1)*.032;
   candle.intensity=fl;
   flipMat.setFloat('uLightInt',fl);
   flipMat.setVector3('uLightPos',candle.position);
@@ -1418,8 +1443,8 @@ engine.runRenderLoop(()=>{
       if(tear_sound_pending){tearSound();tear_sound_pending=false;}
       const k=Math.min((now-tearAnim.t0)/tearAnim.dur,1);
       const e=k*k;                                   // ease-in：先慢後快地飛走
-      rigNote.position.set(PW*0.55+e*1.6, THICK+0.02+Math.sin(e*PI)*1.1+e*.4, 0.32+e*1.3);
-      rigNote.rotation.set(-e*.9,.1+e*1.4,e*.6);
+      rigNote.position.set(PW*0.5+e*1.7, THICK+0.02+Math.sin(e*PI)*1.2+e*.4, 0.5+e*1.3);
+      rigNote.rotation.set(-e*.9,.08+e*1.4,e*.6);
       rigNoteMat.alpha=1-Math.max(0,(k-.55)/.45);
       if(k>=1){
         rigNote.setEnabled(false);
