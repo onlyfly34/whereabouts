@@ -1,0 +1,559 @@
+# ============================================================
+# 世界的下落 · WHEREABOUTS — 事件資料檔
+# ============================================================
+#
+# 這個檔案是整個網站唯一的內容來源，前端會讀取它來渲染畫面。
+# 歡迎發 Pull Request 新增事件、補進展、或補資料來源。
+#
+# ── 怎麼新增一筆進展？ ──
+#   1. 在該事件的 timeline 最後加一個節點（date / art / text / source）
+#   2. 把該事件的 last_progress 改成新節點的日期
+#
+# ── 怎麼結案？ ──
+#   1. status 改為 "closed"
+#   2. 加上 outcome:（date + text）
+#
+# ── 怎麼新增事件？ ──
+#   複製下面任何一個事件的整段，修改內容。收錄標準見 README.md。
+#
+# ── 欄位說明 ──
+#   id:            小寫英數與連字號，唯一值（會成為分享網址）
+#   category:      war | protest | disaster | justice | disease | missing | other
+#   status:        open（未結案）| closed（已結案）
+#   art:           封面浮水印圖樣，見 README 的插圖清單
+#   opened:        立案日（事件起點，YYYY-MM-DD）
+#   last_progress: 最後一次進展日
+#   title/summary/text/stuck: 都要有 zh（繁中）與 en（英文）兩個版本
+#   timeline[].source: 該節點的資料來源（name + url），盡量每個節點都有
+#   timeline[].video:  選填，YouTube 影片 id（網址 v= 後面那串）
+#   outcome:       僅結案事件需要（date + text）
+#
+# ── 文字原則 ──
+#   每個節點一句話，精簡克制、不狗血。
+#   每件事至少 2 個獨立可信來源（官方報告 / 通訊社 / 具公信力媒體）。
+#
+# ============================================================
+
+meta:
+  updated: "2026-06-12"
+
+events:
+
+  # ──────────────────────────────────────────────
+  # 濟州航空 2216 班機空難調查
+  # ──────────────────────────────────────────────
+  - id: "jeju-air-2216"
+    category: "disaster"
+    status: "open"
+    art: "plane"
+    opened: "2024-12-29"
+    last_progress: "2026-06-10"
+    title:
+      zh: "濟州航空 2216 班機空難調查"
+      en: "Jeju Air Flight 2216 crash inquiry"
+    summary:
+      zh: "事發超過一年，179 人罹難的最終調查報告仍未定案，責任歸屬還在拉扯。"
+      en: "More than a year on, the final report into the crash that killed 179 is still unsettled, and the question of blame is still being fought over."
+    timeline:
+      - date: "2024-12-29"
+        art: "plane"
+        text:
+          zh: "班機在務安機場落地時起落架未放下，衝出跑道撞上混凝土定位牆，179 人罹難。"
+          en: "Landing at Muan with its gear up, the jet overran the runway and struck a concrete localizer wall; 179 people died."
+        source:
+          name: "BBC"
+          url: "https://www.bbc.com/news/articles/cz0gzd0dx1do"
+      - date: "2025-01-11"
+        art: "blackbox"
+        text:
+          zh: "調查單位證實兩具黑盒子在撞擊前約四分鐘同時停止記錄。"
+          en: "Investigators confirm both black boxes stopped recording about four minutes before impact."
+        source:
+          name: "YouTube · 濟州空難調查無恥度"
+          url: "https://www.youtube.com/watch?v=tjHq-VcVx80"
+        video: "tjHq-VcVx80"
+      - date: "2026-01-10"
+        art: "report"
+        text:
+          zh: "報告指出，若沒有那道牆，這場事故原本是可生還的；隨即引爆「把報告壓下來」的爭議。"
+          en: "A report finds the crash would have been survivable without that wall — and instantly sets off a row over a cover-up."
+        source:
+          name: "SCMP"
+          url: "https://www.scmp.com/week-asia/health-environment/article/3339677/south-koreas-worst-air-disaster-fury-erupts-over-mound-death"
+      - date: "2026-06-10"
+        art: "search"
+        text:
+          zh: "警方搜索國土交通部總部，調查機場設施與監理責任。"
+          en: "Police raid the transport ministry's headquarters, probing the airport's design and oversight."
+        source:
+          name: "Chosun Biz"
+          url: "https://biz.chosun.com/en/en-society/2026/06/10/DVU2YLGZJBF7DKV4OPF26CAX2A/"
+    stuck:
+      zh: "報告把焦點放在鳥擊與機組處置，卻迴避了那道致命的混凝土定位牆設計；家屬與在野黨指控官方想把問題壓下去。"
+      en: "The report dwells on the bird strike and the crew's handling, yet sidesteps the deadly concrete localizer wall. Families and the opposition accuse officials of trying to bury it."
+
+  # ──────────────────────────────────────────────
+  # 馬航 MH370 海底搜索
+  # ──────────────────────────────────────────────
+  - id: "mh370"
+    category: "missing"
+    status: "open"
+    art: "ship"
+    opened: "2014-03-08"
+    last_progress: "2026-03-08"
+    title:
+      zh: "馬航 MH370 海底搜索"
+      en: "MH370 deep-sea search"
+    summary:
+      zh: "失聯滿十二年，最新一輪深海搜索又一次空手而歸，239 人下落仍是空白。"
+      en: "Twelve years missing, and the latest deep-sea search has come back empty again. The fate of all 239 aboard is still a blank."
+    timeline:
+      - date: "2014-03-08"
+        art: "plane"
+        text:
+          zh: "班機從吉隆坡飛往北京途中失聯，機上 239 人至今未尋獲。"
+          en: "The flight from Kuala Lumpur to Beijing vanished; none of the 239 aboard have been found."
+      - date: "2025-12"
+        art: "ship"
+        text:
+          zh: "Ocean Infinity 依「找不到、不收費」合約重啟印度洋南部搜索。"
+          en: "Ocean Infinity resumes the search in the southern Indian Ocean on a \"no find, no fee\" deal."
+        source:
+          name: "NPR"
+          url: "https://www.npr.org/2026/03/09/g-s1-112960/12-years-missing-flight-mh370"
+      - date: "2026-01-23"
+        art: "ocean"
+        text:
+          zh: "搜索船因天候與進度問題駛離搜索區。"
+          en: "The search vessel leaves the zone, citing weather and slow progress."
+      - date: "2026-03-08"
+        art: "ocean"
+        text:
+          zh: "公司宣布本輪搜索結束，掃描約 7,571 平方公里仍無發現。"
+          en: "The company declares this round over: about 7,571 sq km scanned, still nothing."
+        source:
+          name: "Ocean Infinity"
+          url: "https://oceaninfinity.com/news/conclusion-of-the-search-for-malaysian-airlines-flight-mh370/"
+    stuck:
+      zh: "新合約原訂效期到 2026 年中，但搜索船掃完規劃海域仍一無所獲，已提前撤離；下一步要往哪裡找，沒有答案。"
+      en: "The new contract ran to mid-2026, but the ship swept its planned zone, found nothing, and left early. Where to look next has no answer."
+
+  # ──────────────────────────────────────────────
+  # 烏俄停火談判
+  # ──────────────────────────────────────────────
+  - id: "ukraine-russia-talks"
+    category: "war"
+    status: "open"
+    art: "tank"
+    opened: "2022-02-24"
+    last_progress: "2026-06-11"
+    title:
+      zh: "烏俄停火談判"
+      en: "Ukraine–Russia ceasefire talks"
+    summary:
+      zh: "戰事進入第五年，各方喊出「直接會談」，但坐上桌的那一刻始終沒有到來。"
+      en: "Into its fifth year, everyone calls for \"direct talks\" — but the moment anyone actually sits down never arrives."
+    timeline:
+      - date: "2022-02-24"
+        art: "tank"
+        text:
+          zh: "俄羅斯全面入侵烏克蘭。"
+          en: "Russia launches a full-scale invasion of Ukraine."
+      - date: "2026-06-07"
+        art: "talks"
+        text:
+          zh: "英、法、德領袖表態支持烏俄直接停火談判。"
+          en: "The leaders of Britain, France and Germany back direct ceasefire talks between Ukraine and Russia."
+        source:
+          name: "Reuters"
+          url: "https://www.reuters.com/world/europe/zelenskiy-uk-talks-with-starmer-macron-merz-2026-06-07/"
+      - date: "2026-06-11"
+        art: "flags"
+        text:
+          zh: "歐洲計畫在 G7 峰會爭取川普支持其重啟談判方案；前線無人機互擊仍未停。"
+          en: "Europe plans to win Trump's backing for its restart plan at the G7; drone strikes along the front continue."
+        source:
+          name: "European Pravda"
+          url: "https://www.eurointegration.com.ua/eng/news/2026/06/11/7239460/"
+    stuck:
+      zh: "英法德支持澤倫斯基與普丁面對面，歐洲打算在 G7 上說服川普一起施壓；俄方是否願意直接談、以什麼條件談，都還是未知數。"
+      en: "Britain, France and Germany back a Zelensky–Putin meeting, and Europe means to press Trump at the G7. Whether Russia will talk directly, and on what terms, is still unknown."
+
+  # ──────────────────────────────────────────────
+  # 加薩停火與第二階段
+  # ──────────────────────────────────────────────
+  - id: "gaza-ceasefire"
+    category: "war"
+    status: "open"
+    art: "ruins"
+    opened: "2023-10-07"
+    last_progress: "2026-02-20"
+    title:
+      zh: "加薩停火與第二階段"
+      en: "Gaza ceasefire, phase two"
+    summary:
+      zh: "停火協議已進入第二階段，但治理、解除武裝、穩定部隊等核心難題一個都沒解開，零星交火不斷。"
+      en: "The ceasefire has reached phase two, yet none of the hard questions — governance, disarmament, a stabilization force — are resolved, and sporadic fire goes on."
+    timeline:
+      - date: "2023-10-07"
+        art: "fire"
+        text:
+          zh: "哈瑪斯越境突襲以色列，加薩戰爭爆發。"
+          en: "Hamas launches a cross-border attack on Israel; the Gaza war begins."
+      - date: "2025-10-13"
+        art: "handshake"
+        text:
+          zh: "在川普推動下，以哈於沙姆沙伊赫簽署二十點和平協議。"
+          en: "Pushed by Trump, Israel and Hamas sign a 20-point peace plan at Sharm el-Sheikh."
+        source:
+          name: "CFR"
+          url: "https://www.cfr.org/articles/guide-trumps-twenty-point-gaza-peace-deal"
+      - date: "2026-01-14"
+        art: "document"
+        text:
+          zh: "美方宣布停火進入第二階段，並成立委員會接管加薩。"
+          en: "The US announces phase two of the ceasefire and a committee to run Gaza."
+        source:
+          name: "CNN"
+          url: "https://www.cnn.com/2026/01/14/politics/us-announces-gaza-ceasefire-next-phase"
+      - date: "2026-02-20"
+        art: "ruins"
+        text:
+          zh: "分析普遍質疑第二階段「天生難成」，核心障礙仍未排除。"
+          en: "Analysts widely call phase two \"set up to fail\"; its core obstacles remain."
+        source:
+          name: "CFR"
+          url: "https://www.cfr.org/articles/guide-trumps-twenty-point-gaza-peace-deal"
+    stuck:
+      zh: "誰來管理戰後加薩、哈瑪斯是否繳械、國際穩定部隊由誰組成——這些第二階段的關鍵問題沒有共識，協議隨時可能停擺。"
+      en: "Who governs post-war Gaza, whether Hamas disarms, who makes up the international force — phase two's core questions have no agreement, and the deal could stall at any moment."
+
+  # ──────────────────────────────────────────────
+  # 蘇丹內戰
+  # ──────────────────────────────────────────────
+  - id: "sudan-war"
+    category: "war"
+    status: "open"
+    art: "fire"
+    opened: "2023-04-15"
+    last_progress: "2026-05-25"
+    title:
+      zh: "蘇丹內戰"
+      en: "Sudan's civil war"
+    summary:
+      zh: "政府軍與快速支援部隊（RSF）的戰爭進入第四年，平民承受的暴行不減反增。"
+      en: "The war between the army and the Rapid Support Forces enters its fourth year, and the atrocities against civilians only grow."
+    timeline:
+      - date: "2023-04-15"
+        art: "fire"
+        text:
+          zh: "蘇丹政府軍（SAF）與 RSF 在喀土穆爆發武裝衝突。"
+          en: "Fighting erupts in Khartoum between the Sudanese army (SAF) and the RSF."
+      - date: "2026-02-19"
+        art: "report"
+        text:
+          zh: "聯合國調查指 RSF 在法謝爾犯下種族定向殺戮、性暴力與強迫失蹤。"
+          en: "A UN inquiry says the RSF carried out ethnically targeted killings, sexual violence and enforced disappearances in El Fasher."
+        source:
+          name: "UN News"
+          url: "https://news.un.org/en/story/2026/02/1166997"
+      - date: "2026-05-25"
+        art: "troops"
+        text:
+          zh: "人權團體揭露外國經由第三地向 RSF 輸送外籍戰鬥人員。"
+          en: "Rights groups reveal foreign fighters being funneled to the RSF through a third country."
+        source:
+          name: "Human Rights Watch"
+          url: "https://www.hrw.org/report/2026/05/25/from-bogota-to-el-fasher/the-uaes-role-in-the-deployment-of-colombian-fighters"
+    stuck:
+      zh: "聯合國認定 RSF 在法謝爾的屠殺帶有「種族滅絕特徵」，外部勢力被指持續輸送傭兵與武器；停火遙遙無期。"
+      en: "The UN finds the RSF's killings in El Fasher bear \"hallmarks of genocide,\" outside powers are accused of still funneling in mercenaries and arms, and a ceasefire is nowhere in sight."
+
+  # ──────────────────────────────────────────────
+  # 緬甸內戰與軍政府選舉
+  # ──────────────────────────────────────────────
+  - id: "myanmar-civil-war"
+    category: "war"
+    status: "open"
+    art: "troops"
+    opened: "2021-02-01"
+    last_progress: "2026-06-03"
+    title:
+      zh: "緬甸內戰與軍政府選舉"
+      en: "Myanmar's civil war and junta election"
+    summary:
+      zh: "政變滿五年，軍方辦了一場選舉宣稱還政於民，戰火卻沒有停。"
+      en: "Five years after the coup, the military stages an election it calls a return to civilian rule — and the fighting does not stop."
+    timeline:
+      - date: "2021-02-01"
+        art: "troops"
+        text:
+          zh: "軍方發動政變，推翻民選政府，全國陷入內戰。"
+          en: "The military seizes power, topples the elected government, and the country falls into civil war."
+      - date: "2026-01-29"
+        art: "fire"
+        text:
+          zh: "人權團體記錄政變五年來軍政府暴行全面升級。"
+          en: "Rights groups document a surge in junta atrocities across the five years since the coup."
+        source:
+          name: "Amnesty International"
+          url: "https://www.amnesty.org/en/latest/news/2026/01/myanmar-junta-atrocities-surge-5-years-since-coup/"
+      - date: "2026-06-03"
+        art: "ballot"
+        text:
+          zh: "分析指軍方主導的選舉是「鞏固統治、而非政權轉移」。"
+          en: "Analysts call the military-run vote \"consolidation, not a transition.\""
+        source:
+          name: "Crisis Group"
+          url: "https://www.crisisgroup.org/brf/asia-pacific/myanmar-china/b188-myanmars-new-administration-military-consolidation-not-transition"
+    stuck:
+      zh: "國際普遍認定這場選舉既不自由也不公正，只是軍方鞏固權力的舞台；武裝抵抗仍遍布全國，沒有任何政治解方在望。"
+      en: "The election is widely judged neither free nor fair, just a stage for the generals to entrench power; armed resistance still spans the country, and no political settlement is in sight."
+
+  # ──────────────────────────────────────────────
+  # 尹錫悅內亂案
+  # ──────────────────────────────────────────────
+  - id: "yoon-insurrection"
+    category: "justice"
+    status: "open"
+    art: "gavel"
+    opened: "2024-12-03"
+    last_progress: "2026-04-29"
+    title:
+      zh: "尹錫悅內亂案"
+      en: "Yoon Suk-yeol insurrection trial"
+    summary:
+      zh: "前總統尹錫悅因 2024 年底的戒嚴令一審被判無期徒刑，案件尚未走完。"
+      en: "Former president Yoon Suk-yeol was sentenced to life at first instance over his late-2024 martial law decree, but the case is not yet over."
+    timeline:
+      - date: "2024-12-03"
+        art: "troops"
+        text:
+          zh: "尹錫悅突然宣布緊急戒嚴並派兵進入國會，數小時後遭表決撤銷。"
+          en: "Yoon abruptly declares martial law and sends troops into the National Assembly; lawmakers vote it down hours later."
+      - date: "2026-02-19"
+        art: "gavel"
+        text:
+          zh: "首爾中央地方法院一審認定內亂主謀罪成立，判處無期徒刑。"
+          en: "The Seoul Central District Court convicts him as ringleader of insurrection and sentences him to life."
+        source:
+          name: "中央社 CNA"
+          url: "https://www.cna.com.tw/news/aopl/202602190125.aspx"
+      - date: "2026-04-29"
+        art: "scale"
+        text:
+          zh: "另案妨害拘留等罪二審，刑期由 5 年提高為 7 年。"
+          en: "In a separate case, an appeals court raises his term from 5 to 7 years."
+        source:
+          name: "公視新聞 PTS"
+          url: "https://news.pts.org.tw/article/795687"
+    stuck:
+      zh: "一審內亂主謀罪成、判處無期，但特檢對量刑仍有遺憾，上訴程序展開；最終刑度要到二審、三審才會定。"
+      en: "Convicted at first instance as the ringleader and sentenced to life, but prosecutors are dissatisfied with the term and an appeal is under way; the final sentence won't be settled until the higher courts rule."
+
+  # ──────────────────────────────────────────────
+  # 敘利亞政權更迭後的過渡
+  # ──────────────────────────────────────────────
+  - id: "syria-transition"
+    category: "other"
+    status: "open"
+    art: "flagup"
+    opened: "2024-12-08"
+    last_progress: "2026-05-27"
+    title:
+      zh: "敘利亞政權更迭後的過渡"
+      en: "Syria's post-Assad transition"
+    summary:
+      zh: "阿薩德政權垮台一年多，新政府仍在摸索如何把分裂的國家拼回一個共同體。"
+      en: "More than a year after Assad fell, the new government is still groping for how to piece a fractured country back into one."
+    timeline:
+      - date: "2024-12-08"
+        art: "flagup"
+        text:
+          zh: "反抗軍攻入大馬士革，阿薩德政權垮台。"
+          en: "Rebels sweep into Damascus and the Assad regime falls."
+      - date: "2026-05-27"
+        art: "ballot"
+        text:
+          zh: "庫德族多數的東北省份補辦國會選舉，凸顯過渡仍不完整。"
+          en: "Delayed parliamentary elections are held in the Kurdish-majority northeast, underscoring how incomplete the transition is."
+        source:
+          name: "PBS NewsHour"
+          url: "https://www.pbs.org/newshour/world/syria-holds-legislative-elections-in-kurdish-majority-northeast"
+      - date: "2026-05-27"
+        art: "talks"
+        text:
+          zh: "分析警告：庫德族代表權爭議正威脅 SDF 與大馬士革的整合協議。"
+          en: "Analysts warn the dispute over Kurdish representation is threatening the SDF's integration deal with Damascus."
+        source:
+          name: "FDD"
+          url: "https://www.fdd.org/analysis/2026/05/27/political-exclusion-of-syrian-kurds-threatens-sdf-damascus-deal/"
+    stuck:
+      zh: "臨時總統說全國大選可能要等上五年；庫德族的政治代表權與文化權利成為過渡進程最大裂痕，SDF 與大馬士革的協議岌岌可危。"
+      en: "The interim president says a national vote could be five years away; Kurdish representation and cultural rights have become the transition's deepest fault line, and the SDF–Damascus deal is fragile."
+
+  # ──────────────────────────────────────────────
+  # H5N1 禽流感人傳人風險
+  # ──────────────────────────────────────────────
+  - id: "h5n1-pandemic-risk"
+    category: "disease"
+    status: "open"
+    art: "virus"
+    opened: "2024-03-25"
+    last_progress: "2026-04-01"
+    title:
+      zh: "H5N1 禽流感人傳人風險"
+      en: "H5N1 bird flu pandemic risk"
+    summary:
+      zh: "H5N1 在動物間持續擴散、零星感染人類，至今沒有出現穩定的人傳人，但風險的警報一直沒有解除。"
+      en: "H5N1 keeps spreading among animals and occasionally infects people. Sustained human-to-human spread hasn't happened — but the alarm has never been switched off."
+    timeline:
+      - date: "2024-03-25"
+        art: "virus"
+        text:
+          zh: "美國首度在乳牛群檢出 H5N1，跨物種傳播引發關注。"
+          en: "The US detects H5N1 in dairy cattle for the first time, raising alarm over cross-species spread."
+      - date: "2026-03-06"
+        art: "report"
+        text:
+          zh: "美國 CDC 評估整體公衛風險仍低，但持續監測零星人類病例。"
+          en: "The US CDC judges overall public-health risk still low while monitoring sporadic human cases."
+        source:
+          name: "US CDC"
+          url: "https://www.cdc.gov/bird-flu/situation-summary/index.html"
+      - date: "2026-04-01"
+        art: "virus"
+        text:
+          zh: "WHO 通報第一季四大洲出現新的人類禽流感與豬流感病例。"
+          en: "The WHO reports new human avian- and swine-flu cases across four continents in the first quarter."
+        source:
+          name: "WHO"
+          url: "https://www.who.int/news-room/fact-sheets/detail/influenza-(avian-and-other-zoonotic)"
+    stuck:
+      zh: "病毒在禽鳥、乳牛與其他哺乳類間不斷流行，每一次跨物種感染都是一次賭注；只要它學會在人與人之間傳播，局面就會改變——而沒有人知道那一天會不會來。"
+      en: "The virus circulates in birds, dairy cattle and other mammals, and every cross-species jump is a roll of the dice. The day it learns to pass between people, everything changes — and no one knows whether that day will come."
+
+  # ──────────────────────────────────────────────
+  # 塞爾維亞諾維薩德車站雨棚倒塌與抗議
+  # ──────────────────────────────────────────────
+  - id: "serbia-novi-sad"
+    category: "protest"
+    status: "open"
+    art: "crowd"
+    opened: "2024-11-01"
+    last_progress: "2026-05-14"
+    title:
+      zh: "塞爾維亞諾維薩德車站雨棚倒塌與抗議"
+      en: "Serbia's Novi Sad canopy collapse and protests"
+    summary:
+      zh: "車站雨棚倒塌奪走 16 條人命，由此點燃的學生抗議已持續一年半，至今沒等到高層究責。"
+      en: "A station canopy collapse killed 16 people; the student-led protests it sparked have run for a year and a half, still waiting for anyone at the top to be held to account."
+    timeline:
+      - date: "2024-11-01"
+        art: "ruins"
+        text:
+          zh: "諾維薩德火車站翻修後的水泥雨棚突然倒塌，造成 16 人罹難。"
+          en: "The concrete canopy at the renovated Novi Sad station suddenly collapses, killing 16."
+      - date: "2026-02-19"
+        art: "crowd"
+        text:
+          zh: "學生主導的反政府抗議持續第十五個月，訴求問責與公正調查。"
+          en: "Student-led anti-government protests reach their fifteenth month, demanding accountability and a fair inquiry."
+        source:
+          name: "The Economist"
+          url: "https://www.economist.com/europe/2026/02/19/serbias-protesters-learn-its-hard-to-topple-a-president"
+      - date: "2026-05-14"
+        art: "scale"
+        text:
+          zh: "一名駕駛在悼念集會上倒車衝撞民眾，被控殺人未遂，激化對立。"
+          en: "A driver reverses into mourners at a vigil and is charged with attempted murder, sharpening the confrontation."
+        source:
+          name: "Balkan Insight"
+          url: "https://balkaninsight.com/2026/05/14/driver-faces-attempted-murder-charge-after-car-hits-man-at-serbian-protest/bi/"
+    stuck:
+      zh: "民眾要的是「誰該為這條人命負責」的答案；但抗議拖過十五個月，總統武契奇的位子仍穩，司法獨立反被一連串新法侵蝕。"
+      en: "People want an answer to who is responsible for these deaths; but fifteen months on, President Vučić's grip holds, while a string of new laws erodes judicial independence instead."
+
+  # ──────────────────────────────────────────────
+  # 海地幫派危機與過渡政府
+  # ──────────────────────────────────────────────
+  - id: "haiti-gangs"
+    category: "other"
+    status: "open"
+    art: "barricade"
+    opened: "2024-04-25"
+    last_progress: "2026-04-01"
+    title:
+      zh: "海地幫派危機與過渡政府"
+      en: "Haiti's gang crisis and transitional government"
+    summary:
+      zh: "幫派幾乎掌控首都，過渡政府任期將盡，一支新的聯合國授權部隊剛剛抵達，能否扭轉局面還看不出來。"
+      en: "Gangs all but control the capital, the transitional government's mandate is running out, and a new UN-backed force has just arrived — whether it can turn the tide is still unclear."
+    timeline:
+      - date: "2024-04-25"
+        art: "talks"
+        text:
+          zh: "過渡總統委員會就職，接手幾近崩潰的國家治理。"
+          en: "A transitional presidential council is sworn in to take over a near-collapsed state."
+      - date: "2026-03-17"
+        art: "troops"
+        text:
+          zh: "肯亞主導的多國維安任務開始撤離，移交給新部隊。"
+          en: "The Kenya-led multinational security mission begins withdrawing, handing over to a new force."
+        source:
+          name: "UN News"
+          url: "https://news.un.org/en/story/2026/01/1166806"
+      - date: "2026-04-01"
+        art: "troops"
+        text:
+          zh: "聯合國授權的「打擊幫派部隊」首批部隊抵達海地，任期十二個月。"
+          en: "The first troops of the UN-backed Gang Suppression Force arrive in Haiti on a twelve-month mandate."
+        source:
+          name: "Al Jazeera"
+          url: "https://www.aljazeera.com/news/2026/4/1/first-troops-from-un-backed-gang-suppression-force-arrive-in-haiti"
+    stuck:
+      zh: "肯亞主導的舊任務撤離、新成立的「打擊幫派部隊」才剛進場，初始授權只有十二個月；要在大選前把治安壓下來，時間與兵力都很緊。"
+      en: "The Kenya-led mission has withdrawn and the new Gang Suppression Force has only just deployed, with a twelve-month mandate; to restore order before elections, both time and troops are tight."
+
+  # ──────────────────────────────────────────────
+  # 黎智英國安案（已結案）
+  # ──────────────────────────────────────────────
+  - id: "lai-national-security"
+    category: "justice"
+    status: "closed"
+    art: "scale"
+    opened: "2020-12-03"
+    last_progress: "2026-03-06"
+    title:
+      zh: "黎智英國安案"
+      en: "Jimmy Lai national-security case"
+    summary:
+      zh: "壹傳媒創辦人黎智英國安案一審判囚 20 年，律師團隊宣布不上訴，這條司法路走到了盡頭。"
+      en: "Media founder Jimmy Lai was sentenced to 20 years at first instance under the national-security law; his lawyers say there will be no appeal, and this legal road has reached its end."
+    timeline:
+      - date: "2020-12-03"
+        art: "prison"
+        text:
+          zh: "黎智英首度因涉嫌違反《港區國安法》被拘捕。"
+          en: "Lai is first arrested on suspicion of breaching Hong Kong's national-security law."
+      - date: "2026-02-09"
+        art: "gavel"
+        text:
+          zh: "「串謀勾結外國勢力」等罪成立，一審判處 20 年，為國安法實施以來最重刑期。"
+          en: "Convicted of conspiracy to collude with foreign forces and other charges, he is sentenced to 20 years — the heaviest term since the law took effect."
+        source:
+          name: "BBC 中文"
+          url: "https://www.bbc.com/zhongwen/articles/cr450w2v112o/trad"
+      - date: "2026-02-26"
+        art: "scale"
+        text:
+          zh: "另案欺詐罪上訴得直、定罪與刑罰撤銷，出獄時間略為提前。"
+          en: "In a separate fraud case his appeal succeeds, the conviction and sentence quashed, bringing his release slightly forward."
+        source:
+          name: "德國之聲 DW"
+          url: "https://www.dw.com/zh-hant/%E5%BE%8B%E5%B8%AB%E5%9C%98%E9%9A%8A%E9%BB%8E%E6%99%BA%E8%8B%B1%E4%B8%8D%E6%9C%83%E5%B0%8D%E5%9C%8B%E5%AE%89%E7%BD%AA%E5%88%A4%E6%B1%BA%E6%8F%90%E8%B5%B7%E4%B8%8A%E8%A8%B4/a-76246023"
+    outcome:
+      date: "2026-03-06"
+      text:
+        zh: "國安案一審判囚 20 年、不再上訴，黎智英須服刑至 2040 年。"
+        en: "Twenty years at first instance, no further appeal — Lai is to remain imprisoned until 2040."

@@ -1,0 +1,1479 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>世界的下落 — 還沒有結局的大事</title>
+<meta name="description" content="推開一扇門，地上散著還沒辦完的卷宗。記錄那些還沒有結局、卻漸漸被遺忘的世界大事。">
+<meta property="og:title" content="世界的下落">
+<meta property="og:description" content="有些事沒有結局，只是沒有人再問起。推門進來，撿起一份卷宗。">
+<meta property="og:type" content="website">
+<style>
+  :root{ --ink:#e8ddc8; --dim:#8a7a5f; }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{height:100%;overflow:hidden;background:#0b0805}
+  body{font-family:"Noto Serif TC","Songti TC","PMingLiU",Georgia,serif;color:var(--ink);
+       -webkit-tap-highlight-color:transparent;touch-action:none}
+  #stage{position:fixed;inset:0}
+  #stage canvas{width:100%;height:100%;display:block;outline:none}
+
+  .vignette{position:fixed;inset:0;pointer-events:none;
+    background:radial-gradient(ellipse 72% 60% at 50% 47%, transparent 0%, transparent 50%,
+      rgba(4,2,0,.5) 86%, rgba(2,1,0,.85) 100%);}
+  .grain{position:fixed;inset:0;pointer-events:none;opacity:.05;mix-blend-mode:overlay;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/></filter><rect width='160' height='160' filter='url(%23n)' opacity='0.7'/></svg>");}
+
+  #intro{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;
+    justify-content:center;gap:22px;transition:opacity 1.4s ease;
+    text-shadow:0 0 24px rgba(0,0,0,.9);cursor:pointer;padding:0 24px;text-align:center}
+  #intro.gone{opacity:0;pointer-events:none}
+  #intro .stamp{font-size:11px;letter-spacing:.3em;color:#564a38;border:1px solid #3a3022;
+    border-radius:2px;padding:5px 12px}
+  #intro h1{font-size:clamp(40px,8vw,72px);font-weight:600;letter-spacing:.4em;text-indent:.4em;color:#f0e4ca}
+  body[data-lang="en"] #intro h1{font-size:clamp(26px,6vw,54px);letter-spacing:.18em;text-indent:.18em}
+  #intro .line{font-size:15px;letter-spacing:.18em;color:#b3a382;line-height:2}
+  body[data-lang="en"] #intro .line{letter-spacing:.06em}
+  #intro p.go{font-size:13px;letter-spacing:.4em;text-indent:.4em;color:var(--dim);
+    animation:breathe 3s ease-in-out infinite;margin-top:8px}
+  body[data-lang="en"] #intro p.go{letter-spacing:.22em;text-indent:.22em}
+  @keyframes breathe{0%,100%{opacity:.45}50%{opacity:.95}}
+
+  #hint{position:fixed;left:0;right:0;bottom:24px;text-align:center;font-size:12px;
+    letter-spacing:.28em;text-indent:.28em;color:var(--dim);pointer-events:none;
+    opacity:0;transition:opacity .8s ease;padding:0 16px}
+  body[data-lang="en"] #hint{letter-spacing:.12em;text-indent:.12em}
+  #hint.show{opacity:.9;animation:breathe 3.2s ease-in-out infinite}
+
+  #folio{position:fixed;top:max(18px,env(safe-area-inset-top));right:22px;font-size:12px;
+    letter-spacing:.25em;color:var(--dim);pointer-events:none;opacity:0;transition:opacity 1s ease}
+  #folio.show{opacity:.85}
+
+  #down{position:fixed;bottom:max(20px,env(safe-area-inset-bottom));left:20px;
+    font-size:12px;letter-spacing:.25em;color:var(--dim);
+    border:1px solid rgba(138,122,95,.4);border-radius:3px;padding:9px 16px;
+    background:rgba(10,7,4,.5);backdrop-filter:blur(4px);cursor:pointer;
+    opacity:0;pointer-events:none;transition:opacity .8s ease}
+  body[data-lang="en"] #down{letter-spacing:.12em}
+  #down.show{opacity:.9;pointer-events:auto}
+
+  /* 語言切換 */
+  #lang{position:fixed;top:max(16px,env(safe-area-inset-top));left:18px;z-index:40;
+    display:flex;gap:2px;border:1px solid rgba(138,122,95,.4);border-radius:999px;
+    padding:3px;background:rgba(10,7,4,.55);backdrop-filter:blur(4px)}
+  #lang button{font-family:inherit;font-size:11px;letter-spacing:.08em;cursor:pointer;
+    border:none;background:none;color:var(--dim);padding:5px 12px;border-radius:999px}
+  #lang button[aria-pressed="true"]{background:rgba(138,122,95,.32);color:#f0e4ca}
+
+  /* 每頁資料來源 chips */
+  #chips{position:fixed;left:0;right:0;bottom:max(64px,calc(env(safe-area-inset-bottom) + 44px));
+    display:flex;justify-content:center;gap:8px;flex-wrap:wrap;pointer-events:none;
+    opacity:0;transition:opacity .5s ease;padding:0 16px}
+  #chips.show{opacity:1}
+  .chip{pointer-events:auto;cursor:pointer;font-size:11px;letter-spacing:.12em;
+    color:#cdbd99;border:1px solid rgba(138,122,95,.45);border-radius:14px;
+    padding:6px 14px;background:rgba(12,8,4,.62);backdrop-filter:blur(4px);
+    white-space:nowrap}
+  .chip:hover{color:#f0e4ca;border-color:rgba(200,180,140,.7)}
+  .chip.video{color:#e8c98a}
+
+  /* 影像附件 modal */
+  #vmodal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;
+    background:rgba(4,2,0,.88);z-index:50;flex-direction:column;gap:14px;padding:18px}
+  #vmodal.show{display:flex}
+  #vmodal .frame{width:min(92vw,880px);aspect-ratio:16/9;background:#000;
+    border:1px solid #3a3022;border-radius:4px;overflow:hidden}
+  #vmodal iframe{width:100%;height:100%;border:0}
+  #vmodal .bar{display:flex;gap:16px;align-items:center}
+  #vmodal .bar a{color:#cdbd99;font-size:12px;letter-spacing:.15em;text-decoration:none;
+    border-bottom:1px dotted #6a5c44}
+  #vmodal .close{cursor:pointer;color:#cdbd99;font-size:13px;letter-spacing:.2em;
+    border:1px solid rgba(138,122,95,.45);border-radius:3px;padding:7px 16px;
+    background:rgba(12,8,4,.6)}
+
+  @media (prefers-reduced-motion: reduce){ #intro p.go,#hint.show{animation:none} }
+</style>
+</head>
+<body>
+<div id="stage"></div>
+<div class="vignette"></div>
+<div class="grain"></div>
+
+<div id="lang" role="group" aria-label="Language">
+  <button data-lang="zh" type="button">中文</button>
+  <button data-lang="en" type="button">EN</button>
+</div>
+
+<div id="intro">
+  <div class="stamp">WHEREABOUTS · 世界的下落</div>
+  <h1 id="intro-title">世界的下落</h1>
+  <div class="line" id="intro-line"></div>
+  <p class="go" id="intro-go"></p>
+</div>
+<div id="hint"></div>
+<div id="folio"></div>
+<div id="down"></div>
+<div id="chips"></div>
+
+<div id="vmodal">
+  <div class="frame"><iframe id="vframe" src="" allow="autoplay; encrypted-media" allowfullscreen title="video attachment"></iframe></div>
+  <div class="bar">
+    <a id="vlink" href="#" target="_blank" rel="noopener"></a>
+    <div class="close" id="vclose"></div>
+  </div>
+</div>
+
+<noscript><p style="padding:24px;text-align:center;color:#b3a382">這個頁面需要 JavaScript · This page needs JavaScript. <a href="events.yaml" style="color:#cdbd99">events.yaml</a></p></noscript>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babylonjs/8.20.0/babylon.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.1.0/js-yaml.min.js"></script>
+<script>
+/* ============================================================
+   世界的下落 · WHEREABOUTS（Babylon.js 場景版）
+   流程：序言 → 走入房間 → 地上卷宗（便條紙寫擱置天數）
+        → 點選 → 撿起 → 撕便條 → 自動翻開封面 → 自由翻閱
+   內容：全部來自 events.yaml（繁中 / 英文雙語）
+   ============================================================ */
+const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const FINE = matchMedia('(pointer: fine)').matches;
+const PI = Math.PI;
+const DAY = 86400000;
+const TODAY = new Date();
+
+/* ---------------- 語系 ---------------- */
+let LANG = localStorage.getItem('wb-lang') ||
+           ((navigator.language||'en').toLowerCase().startsWith('zh') ? 'zh' : 'en');
+let pendingLang = null;
+const STRINGS = {
+  introTitle:   {zh:'世界的下落', en:'WHEREABOUTS'},
+  introLine:    {zh:'有些事沒有結局，<br>只是沒有人再問起。',
+                 en:'Some things never got an ending —<br>people just stopped asking.'},
+  introGo:      {zh:'敲 一 下 ， 推 門 進 去', en:'Knock, and step inside'},
+  hintChoose:   {zh:n=>`地上散著 ${n} 份卷宗 · 撿起一份`, en:n=>`${n} case files lie on the floor · pick one up`},
+  hintRead:     {zh:'點擊右側翻頁 · 左側回翻', en:'Tap right to turn the page · left to go back'},
+  hintReadPort: {zh:'點右側往下讀 · 左側回看', en:'Tap right to read on · left to look back'},
+  loading:      {zh:'卷宗整理中…', en:'Preparing the files…'},
+  loadFail:     {zh:e=>`讀取卷宗失敗（${e}）— 原始資料：events.yaml`, en:e=>`Failed to load the files (${e}) — raw data: events.yaml`},
+  folioCover:   {zh:'— 封面 —', en:'— Cover —'},
+  folioEnd:     {zh:'— 卷宗末頁 —', en:'— Last page —'},
+  putBack:      {zh:'放 回 地 上', en:'Put it back'},
+  chipSrc:      {zh:n=>`附件 · ${n} ↗`, en:n=>`Source · ${n} ↗`},
+  chipVideo:    {zh:'▶ 影像附件', en:'▶ Video'},
+  vOpen:        {zh:'在 YouTube 開啟 ↗', en:'Open on YouTube ↗'},
+  vClose:       {zh:'收 起 附 件', en:'Close'},
+  noteOpen:     {zh:'天，沒有下落', en:'days, no ending'},
+  noteClosed:   {zh:'天 · 已結案', en:'days · closed'},
+  shelvedLabel: {zh:'這件事已被擱置', en:'This has been left for'},
+  resolvedLabel:{zh:'從立案到有下落', en:'From opening to resolution'},
+  dayUnit:      {zh:' 天', en:' days'},
+  filed:        {zh:d=>`立案 ${d}`, en:d=>`Opened ${d}`},
+  filedResolved:{zh:d=>`立案 ${d} · 已有下落`, en:d=>`Opened ${d} · resolved`},
+  catClosed:    {zh:'已結案', en:'closed'},
+  srcLabel:     {zh:n=>`附件 · 資料來源：${n}`, en:n=>`Source · ${n}`},
+  videoNote:    {zh:'▶ 本頁有影像附件（畫面下方可播放）', en:'▶ Video attachment — playable below'},
+  stuckLabel:   {zh:'目前卡在', en:'Stuck on'},
+  closedStamp:  {zh:'結案 · CLOSED', en:'CLOSED'},
+  endTitle:     {zh:'這份卷宗先到這裡。', en:'This file ends here, for now.'},
+  endOpen:      {zh:'放回地上，或撿起下一份。', en:'Put it back, or pick up another.'},
+  endClosed:    {zh:'它已經有了下落。', en:'It has found its ending.'},
+  pendingTitle: {zh:'這份卷宗還在整理中。', en:'This file is still being prepared.'},
+  pendingSub:   {zh:'改天再來看看它的下落。', en:'Come back another day to see.'},
+};
+function S(k,...a){const v=STRINGS[k][LANG];return typeof v==='function'?v(...a):v;}
+function T(v){return v==null?'':(typeof v==='object'&&('zh' in v||'en' in v)?(v[LANG]??v.zh??v.en):v);}
+
+/* ---------------- 分類 ---------------- */
+const CATS = {
+  war:     {label:{zh:'戰爭',     en:'War'},      accent:'#9C3B2E', leather:['#33201a','#1d100c']},
+  protest: {label:{zh:'示威',     en:'Protest'},  accent:'#B07A2A', leather:['#33270f','#1f160a']},
+  disaster:{label:{zh:'災難調查', en:'Disaster'}, accent:'#5C6B66', leather:['#232b28','#141a18']},
+  justice: {label:{zh:'司法',     en:'Justice'},  accent:'#3E5C3A', leather:['#1f2a1c','#121a11']},
+  disease: {label:{zh:'疾病',     en:'Disease'},  accent:'#7A5BA0', leather:['#28203a','#171225']},
+  missing: {label:{zh:'失蹤',     en:'Missing'},  accent:'#3E6E8C', leather:['#1b2a36','#101a23']},
+  other:   {label:{zh:'進行中',   en:'Ongoing'},  accent:'#566A64', leather:['#1f2725','#121817']},
+};
+
+/* ---------------- 事件資料（events.yaml） ---------------- */
+let EVENTS = [];
+let DATA_ERR = null;
+const days=(a,b)=>Math.max(0,Math.floor((b-new Date(a))/DAY));
+async function loadData(){
+  try{
+    const res=await fetch('events.yaml',{cache:'no-cache'});
+    if(!res.ok)throw new Error('events.yaml '+res.status);
+    const y=jsyaml.load(await res.text(),{schema:jsyaml.CORE_SCHEMA});
+    EVENTS=(y.events||[]).map(e=>({
+      id:e.id, cat:CATS[e.category]?e.category:'other', art:e.art||'document',
+      status:e.status==='closed'?'closed':'open',
+      start:String(e.opened), last:String(e.last_progress||e.opened),
+      title:e.title, current:e.summary,
+      timeline:Array.isArray(e.timeline)&&e.timeline.length?e.timeline:null,
+      stuck:e.stuck||null,
+      outcome:e.outcome||null,
+    }));
+    EVENTS.forEach(e=>{
+      e.noteDays = days(e.start, e.status==='closed'&&e.outcome?new Date(e.outcome.date):TODAY);
+      e.staleDays = days(e.last, TODAY);
+      e.dust = e.staleDays>=365?4:e.staleDays>=180?3:e.staleDays>=90?2:e.staleDays>=30?1:0;
+    });
+    buildFloor();
+    if(state==='WAITDATA'){state='CHOOSE';setHint(S('hintChoose',EVENTS.length));}
+  }catch(err){
+    DATA_ERR=err.message;
+    if(state==='WAITDATA')setHint(S('loadFail',DATA_ERR));
+    console.error(err);
+  }
+}
+
+/* ---------------- 常數 / 引擎 ---------------- */
+const PW=3.0, PH=4.05, THICK=0.26, TH2=THICK+0.1;
+const PXW=880, PXH=1180;
+const FONT=`"Noto Serif TC","Songti TC","PMingLiU",Georgia,serif`;
+
+const stage=document.getElementById('stage');
+const canvas=document.createElement('canvas');
+stage.appendChild(canvas);
+let engine;
+try{
+  engine=new BABYLON.Engine(canvas,true,{stencil:false});
+}catch(err){
+  document.getElementById('intro-line').innerHTML=
+    '這個頁面需要 WebGL。<br>This page needs WebGL. — <a href="events.yaml" style="color:#cdbd99">events.yaml</a>';
+  document.getElementById('intro-go').textContent='';
+  throw err;
+}
+engine.setHardwareScalingLevel(1/Math.min(devicePixelRatio,2));
+const scene=new BABYLON.Scene(engine);
+scene.useRightHandedSystem=true;
+scene.clearColor=BABYLON.Color4.FromHexString('#0b0805FF');
+scene.fogMode=BABYLON.Scene.FOGMODE_LINEAR;
+scene.fogColor=BABYLON.Color3.FromHexString('#0b0805');
+scene.fogStart=12; scene.fogEnd=36;
+
+const camera=new BABYLON.UniversalCamera('cam',new BABYLON.Vector3(0,7.6,18),scene);
+camera.fov=46*PI/180; camera.minZ=.1; camera.maxZ=90;
+
+const candle=new BABYLON.PointLight('candle',new BABYLON.Vector3(3.4,7.5,4.2),scene);
+candle.diffuse=BABYLON.Color3.FromHexString('#ffb45e');
+candle.specular=BABYLON.Color3.FromHexString('#ffd9a0').scale(.3);
+candle.range=26; candle.intensity=.75;
+const moon=new BABYLON.PointLight('moon',new BABYLON.Vector3(-7,9,-10),scene);
+moon.diffuse=BABYLON.Color3.FromHexString('#6a7fa8');
+moon.specular=BABYLON.Color3.Black();
+moon.range=44; moon.intensity=.28;
+const hemi=new BABYLON.HemisphericLight('amb',new BABYLON.Vector3(0,1,0),scene);
+hemi.diffuse=BABYLON.Color3.FromHexString('#574736');
+hemi.groundColor=BABYLON.Color3.FromHexString('#241a10');
+hemi.intensity=.4;
+
+/* ---------------- 共用：DynamicTexture / 紙張 / 斷行 ---------------- */
+function newTex(w=PXW,h=PXH){
+  const t=new BABYLON.DynamicTexture('t'+Math.random(),{width:w,height:h},scene,true);
+  t.anisotropicFilteringLevel=8;
+  return t;
+}
+function parchment(ctx,w=PXW,h=PXH){
+  const g=ctx.createLinearGradient(0,0,w,h);
+  g.addColorStop(0,'#efe5cd');g.addColorStop(.5,'#e9ddc2');g.addColorStop(1,'#e2d3b4');
+  ctx.fillStyle=g;ctx.fillRect(0,0,w,h);
+  for(let i=0;i<w;i++){
+    ctx.fillStyle=Math.random()<.5?'rgba(120,95,60,.05)':'rgba(255,250,235,.06)';
+    ctx.fillRect(Math.random()*w,Math.random()*h,1.4,1.4);
+  }
+  const e=ctx.createRadialGradient(w/2,h/2,h*.35,w/2,h/2,h*.78);
+  e.addColorStop(0,'rgba(0,0,0,0)');e.addColorStop(1,'rgba(92,66,34,.22)');
+  ctx.fillStyle=e;ctx.fillRect(0,0,w,h);
+}
+/* token：單一 CJK 字元｜連續拉丁字（英文單字不拆）｜空白 */
+const TOKEN_RE=/[　-鿿豈-﫿＀-￯]|[^\s　-鿿豈-﫿＀-￯]+|\s+/g;
+function wrap(ctx,text,maxW){
+  const out=[];
+  for(const para of String(text).split('\n')){
+    if(para.trim()===''){out.push('');continue;}
+    let line='';
+    for(const tok of para.match(TOKEN_RE)||[]){
+      if(line&&ctx.measureText(line+tok).width>maxW){
+        out.push(line.trimEnd());
+        line=tok.trimStart();
+        while(ctx.measureText(line).width>maxW&&line.length>1){   // 超長單字硬切
+          let cut=line.length-1;
+          while(cut>1&&ctx.measureText(line.slice(0,cut)).width>maxW)cut--;
+          out.push(line.slice(0,cut));line=line.slice(cut);
+        }
+      }else line+=tok;
+    }
+    out.push(line.trimEnd());
+  }
+  return out;
+}
+
+/* ---------------- 插圖庫（墨線風格） ---------------- */
+function drawArt(ctx,name,cx,cy,s,color){
+  ctx.save();
+  ctx.translate(cx,cy);
+  ctx.strokeStyle=color;ctx.fillStyle=color;
+  ctx.lineWidth=Math.max(2,s*.035);ctx.lineCap='round';ctx.lineJoin='round';
+  const u=s/2, P=p=>p*u;
+  const L=(a,b,c,d)=>{ctx.beginPath();ctx.moveTo(P(a),P(b));ctx.lineTo(P(c),P(d));ctx.stroke();};
+  const C=(x,y,r,f)=>{ctx.beginPath();ctx.arc(P(x),P(y),P(r),0,PI*2);f?ctx.fill():ctx.stroke();};
+  switch(name){
+    case 'plane':
+      ctx.rotate(.28);
+      ctx.beginPath();ctx.ellipse(0,0,P(.8),P(.16),0,0,PI*2);ctx.stroke();
+      L(-.05,-.1,-.55,-.62);L(.18,-.1,-.2,-.62);
+      L(-.68,-.05,-.95,-.32);
+      L(.95,.55,.55,.55);L(1.05,.75,.45,.75);
+      break;
+    case 'blackbox':
+      ctx.strokeRect(P(-.85),P(-.45),P(1.7),P(.9));
+      ctx.beginPath();ctx.moveTo(P(-.7),0);
+      for(let i=0;i<14;i++){const x=-.7+i*.07;ctx.lineTo(P(x),P((i%2?-.22:.22)*(1-i/16)));}
+      ctx.lineTo(P(.45),0);ctx.lineTo(P(.72),0);ctx.stroke();
+      C(.72,0,.05,true);
+      break;
+    case 'report':
+      ctx.strokeRect(P(-.55),P(-.8),P(1.1),P(1.6));
+      L(-.38,-.55,.38,-.55);L(-.38,-.3,.38,-.3);
+      ctx.fillRect(P(-.38),P(-.1),P(.76),P(.12));
+      ctx.fillRect(P(-.38),P(.18),P(.5),P(.12));
+      L(-.38,.55,.2,.55);
+      break;
+    case 'search':
+      C(-.15,-.15,.5,false);
+      L(.22,.22,.75,.75);
+      ctx.setLineDash([P(.1),P(.1)]);
+      ctx.strokeRect(P(-.85),P(-.85),P(1.7),P(1.7));
+      ctx.setLineDash([]);
+      break;
+    case 'ship':
+      ctx.beginPath();ctx.moveTo(P(-.8),P(-.1));ctx.lineTo(P(.8),P(-.1));
+      ctx.lineTo(P(.55),P(.25));ctx.lineTo(P(-.55),P(.25));ctx.closePath();ctx.stroke();
+      L(0,-.1,0,-.6);L(0,-.6,.35,-.45);
+      for(const r of[.35,.55,.75]){ctx.beginPath();ctx.arc(0,P(.45),P(r),.25*PI,.75*PI);ctx.stroke();}
+      break;
+    case 'ocean':
+      for(const dy of[-.4,-.12]){
+        ctx.beginPath();
+        for(let i=0;i<=20;i++){const x=-.85+i*.085;ctx[i?'lineTo':'moveTo'](P(x),P(dy+Math.sin(i*1.15)*.06));}
+        ctx.stroke();
+      }
+      L(0,.12,0,.62);L(-.13,.46,0,.62);L(.13,.46,0,.62);
+      ctx.font=`600 ${P(.5)}px ${FONT}`;ctx.textAlign='center';ctx.textBaseline='middle';
+      ctx.fillText('?',P(.5),P(.45));
+      break;
+    case 'tank':
+      ctx.strokeRect(P(-.75),P(.05),P(1.5),P(.4));
+      ctx.strokeRect(P(-.3),P(-.3),P(.6),P(.35));
+      L(.3,-.15,.95,-.25);
+      C(-.5,.45,.12);C(-.15,.45,.12);C(.2,.45,.12);C(.55,.45,.12);
+      break;
+    case 'ruins':
+      L(-.85,.7,.85,.7);
+      ctx.strokeRect(P(-.7),P(-.1),P(.35),P(.8));
+      ctx.strokeRect(P(-.7),P(-.55),P(.35),P(.3));
+      L(-.2,.7,-.2,-.3);L(-.2,-.3,.15,-.05);L(.15,-.05,.15,.7);
+      L(.4,.5,.6,.35);L(.5,.62,.72,.5);
+      break;
+    case 'fire':
+      ctx.beginPath();
+      ctx.moveTo(0,P(.7));
+      ctx.bezierCurveTo(P(-.7),P(.3),P(-.25),P(-.2),0,P(-.75));
+      ctx.bezierCurveTo(P(.25),P(-.2),P(.7),P(.3),0,P(.7));
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(0,P(.45));
+      ctx.bezierCurveTo(P(-.25),P(.2),P(-.05),P(0),P(.05),P(-.25));
+      ctx.bezierCurveTo(P(.2),P(.05),P(.25),P(.25),0,P(.45));
+      ctx.stroke();
+      break;
+    case 'flags':
+      for(const dx of[-.6,0,.6]){
+        L(dx,.7,dx,-.6);
+        ctx.beginPath();ctx.moveTo(P(dx),P(-.6));ctx.lineTo(P(dx+.42),P(-.46));ctx.lineTo(P(dx),P(-.32));ctx.closePath();ctx.stroke();
+      }
+      L(-.85,.7,.85,.7);
+      break;
+    case 'talks':
+      ctx.strokeRect(P(-.7),P(0),P(1.4),P(.12));
+      C(-.45,-.3,.13);L(-.45,-.17,-.45,0);
+      C(.45,-.3,.13);L(.45,-.17,.45,0);
+      L(-.2,-.55,.2,-.55);
+      break;
+    case 'handshake':
+      L(-.85,-.12,-.35,.08);L(.85,-.12,.35,.08);
+      ctx.strokeRect(P(-.35),P(-.02),P(.7),P(.24));
+      L(-.22,.22,-.17,.36);L(-.02,.22,.03,.38);L(.18,.22,.23,.36);
+      break;
+    case 'document':
+      ctx.strokeRect(P(-.5),P(-.7),P(1),P(1.4));
+      L(-.32,-.45,.32,-.45);L(-.32,-.2,.32,-.2);L(-.32,.05,.32,.05);L(-.32,.3,.1,.3);
+      C(.25,.5,.18,false);L(.18,.5,.23,.56);L(.23,.56,.34,.42);
+      break;
+    case 'troops':
+      for(const dx of[-.55,0,.55]){
+        C(dx,-.4,.14);
+        L(dx,-.26,dx,.25);
+        L(dx,.25,dx-.15,.65);L(dx,.25,dx+.15,.65);
+        L(dx-.2,0,dx+.2,-.05);
+      }
+      break;
+    case 'ballot':
+      ctx.strokeRect(P(-.6),P(.05),P(1.2),P(.6));
+      ctx.save();ctx.lineWidth*=2;L(-.25,.05,.25,.05);ctx.restore();
+      ctx.strokeRect(P(-.18),P(-.65),P(.36),P(.52));
+      L(-.08,-.42,0,-.32);L(0,-.32,.12,-.54);
+      break;
+    case 'gavel':
+      ctx.save();ctx.rotate(-.6);
+      ctx.strokeRect(P(-.18),P(-.7),P(.36),P(.45));
+      L(0,-.25,0,.45);
+      ctx.restore();
+      ctx.strokeRect(P(.1),P(.55),P(.6),P(.14));
+      break;
+    case 'flagup':
+      L(-.4,.8,-.4,-.8);
+      ctx.beginPath();ctx.moveTo(P(-.4),P(-.8));
+      ctx.lineTo(P(.5),P(-.6));ctx.lineTo(P(-.4),P(-.4));ctx.closePath();ctx.stroke();
+      L(-.6,.8,-.2,.8);
+      break;
+    case 'virus':
+      C(0,0,.42,false);
+      for(let i=0;i<8;i++){
+        const a=i*PI/4;
+        L(Math.cos(a)*.42,Math.sin(a)*.42,Math.cos(a)*.68,Math.sin(a)*.68);
+        C(Math.cos(a)*.74,Math.sin(a)*.74,.05);
+      }
+      break;
+    case 'crowd':
+      for(const dx of[-.65,-.32,.01,.34,.67]){C(dx,.1,.12);L(dx,.22,dx,.6);}
+      L(.34,-.02,.34,-.7);
+      ctx.beginPath();ctx.moveTo(P(.34),P(-.7));ctx.lineTo(P(.72),P(-.58));
+      ctx.lineTo(P(.34),P(-.46));ctx.closePath();ctx.stroke();
+      break;
+    case 'barricade':
+      ctx.save();ctx.rotate(.12);
+      ctx.strokeRect(P(-.8),P(.2),P(1.6),P(.16));
+      ctx.strokeRect(P(-.65),P(-.05),P(1.3),P(.16));ctx.restore();
+      ctx.beginPath();
+      ctx.moveTo(P(.1),P(-.05));
+      ctx.bezierCurveTo(P(-.15),P(-.3),P(.05),P(-.45),P(.1),P(-.65));
+      ctx.bezierCurveTo(P(.3),P(-.4),P(.35),P(-.25),P(.1),P(-.05));
+      ctx.stroke();
+      break;
+    case 'scale':
+      L(0,-.7,0,.5);L(-.6,-.5,.6,-.5);
+      L(-.6,-.5,-.75,-.1);L(-.6,-.5,-.45,-.1);
+      ctx.beginPath();ctx.arc(P(-.6),P(-.1),P(.17),0,PI);ctx.stroke();
+      L(.6,-.5,.45,-.1);L(.6,-.5,.75,-.1);
+      ctx.beginPath();ctx.arc(P(.6),P(-.1),P(.17),0,PI);ctx.stroke();
+      L(-.3,.5,.3,.5);
+      break;
+    case 'prison':
+      ctx.strokeRect(P(-.7),P(-.65),P(1.4),P(1.3));
+      for(const dx of[-.42,-.14,.14,.42])L(dx,-.65,dx,.65);
+      break;
+    case 'archive':
+      ctx.strokeRect(P(-.6),P(-.25),P(1.2),P(.85));
+      ctx.strokeRect(P(-.7),P(-.53),P(1.4),P(.28));
+      L(-.2,.08,.2,.08);
+      break;
+    default:
+      C(0,0,.5,false);L(-.3,0,.3,0);
+  }
+  ctx.restore();
+}
+
+/* ---------------- 卷宗各頁面 texture ---------------- */
+function fmtDate(s){return String(s).replaceAll('-','.');}
+function coverFace(ev){
+  const cat=CATS[ev.cat];
+  const tex=newTex(), ctx=tex.getContext();
+  const g=ctx.createLinearGradient(0,0,PXW,PXH);
+  g.addColorStop(0,cat.leather[0]);g.addColorStop(1,cat.leather[1]);
+  ctx.fillStyle=g;ctx.fillRect(0,0,PXW,PXH);
+  for(let i=0;i<1400;i++){
+    ctx.fillStyle=Math.random()<.5?'rgba(0,0,0,.08)':'rgba(255,230,190,.03)';
+    ctx.fillRect(Math.random()*PXW,Math.random()*PXH,1.6,1.6);
+  }
+  ctx.strokeStyle=cat.accent;ctx.globalAlpha=.75;
+  ctx.lineWidth=3;ctx.strokeRect(56,56,PXW-112,PXH-112);
+  ctx.lineWidth=1.2;ctx.strokeRect(76,76,PXW-152,PXH-152);
+  ctx.globalAlpha=.16;
+  drawArt(ctx,ev.art,PXW/2,PXH*0.36,420,cat.accent);
+  ctx.globalAlpha=1;
+  // 分類印章
+  const stampTxt=T(cat.label)+(ev.status==='closed'?' · '+S('catClosed'):'');
+  ctx.save();ctx.translate(140,148);ctx.rotate(-.05);
+  ctx.strokeStyle=cat.accent;ctx.lineWidth=3;
+  ctx.font=`600 34px ${FONT}`;
+  const tw=ctx.measureText(stampTxt).width;
+  ctx.strokeRect(-22,-30,tw+44,62);
+  ctx.fillStyle=cat.accent;ctx.textAlign='left';ctx.textBaseline='middle';
+  ctx.fillText(stampTxt,0,2);
+  ctx.restore();
+  // 標題（最多三行）
+  ctx.fillStyle='#e9dcc0';ctx.textAlign='center';ctx.textBaseline='top';
+  ctx.font=`600 64px ${FONT}`;
+  const tl=wrap(ctx,T(ev.title),PXW-220);
+  let ty=PXH*0.42;
+  for(const ln of tl.slice(0,3)){ctx.fillText(ln,PXW/2,ty);ty+=92;}
+  // 現況
+  ctx.font=`400 30px ${FONT}`;ctx.fillStyle='rgba(222,206,170,.78)';
+  const cl=wrap(ctx,T(ev.current),PXW-260);
+  ty+=24;
+  for(const ln of cl){ctx.fillText(ln,PXW/2,ty);ty+=48;}
+  // 擱置天數 / 結案天數
+  ctx.font=`400 26px ${FONT}`;ctx.fillStyle='rgba(200,182,148,.7)';
+  ctx.fillText(ev.status==='closed'?S('resolvedLabel'):S('shelvedLabel'),PXW/2,PXH-300);
+  ctx.font=`600 96px ${FONT}`;ctx.fillStyle=cat.accent;
+  ctx.fillText(`${ev.noteDays}${S('dayUnit')}`,PXW/2,PXH-256);
+  ctx.font=`400 24px ${FONT}`;ctx.fillStyle='rgba(200,182,148,.6)';
+  ctx.fillText(ev.status==='closed'?S('filedResolved',fmtDate(ev.start)):S('filed',fmtDate(ev.start)),PXW/2,PXH-120);
+  tex.update();
+  return tex;
+}
+function floorCover(ev){            // 地上的封皮：無標題、無圖樣（天數寫在便條紙上）
+  const W=440,H=590;
+  const cat=CATS[ev.cat];
+  const tex=newTex(W,H), ctx=tex.getContext();
+  const g=ctx.createLinearGradient(0,0,W,H);
+  g.addColorStop(0,cat.leather[0]);g.addColorStop(1,cat.leather[1]);
+  ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+  for(let i=0;i<400;i++){
+    ctx.fillStyle=Math.random()<.5?'rgba(0,0,0,.08)':'rgba(255,230,190,.03)';
+    ctx.fillRect(Math.random()*W,Math.random()*H,1.4,1.4);
+  }
+  ctx.strokeStyle=cat.accent;ctx.globalAlpha=.5;ctx.lineWidth=2;
+  ctx.strokeRect(26,26,W-52,H-52);
+  ctx.globalAlpha=.25;ctx.lineWidth=1;
+  ctx.strokeRect(40,40,W-80,H-80);
+  ctx.globalAlpha=1;
+  tex.update();
+  return tex;
+}
+function noteTexOf(ev){             // 便條紙：擱置天數
+  const W=256,H=256;
+  const tex=newTex(W,H), ctx=tex.getContext();
+  const closed=ev.status==='closed';
+  ctx.fillStyle=closed?'#b9c8a6':'#e8d36b';
+  ctx.fillRect(8,8,W-16,H-16);
+  ctx.fillStyle='rgba(0,0,0,.12)';
+  ctx.fillRect(8,H-22,W-16,14);
+  ctx.fillStyle='rgba(255,255,255,.45)';
+  ctx.fillRect(W/2-44,0,88,26);     // 膠帶
+  ctx.fillStyle='#3a3016';ctx.textAlign='center';
+  ctx.font=`600 ${ev.noteDays>=1000?72:86}px ${FONT}`;ctx.textBaseline='middle';
+  ctx.fillText(String(ev.noteDays),W/2,H/2-12);
+  ctx.font=`400 ${LANG==='en'?26:30}px ${FONT}`;
+  ctx.fillText(closed?S('noteClosed'):S('noteOpen'),W/2,H/2+62);
+  tex.update();
+  return tex;
+}
+function insideFace(){
+  const tex=newTex(), ctx=tex.getContext();
+  parchment(ctx);
+  ctx.strokeStyle='rgba(150,60,50,.5)';ctx.lineWidth=4;
+  ctx.beginPath();ctx.arc(PXW-200,PXH-230,86,0,PI*2);ctx.stroke();
+  ctx.fillStyle='rgba(150,60,50,.55)';ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.font=`600 30px ${FONT}`;
+  ctx.fillText('世界的',PXW-200,PXH-262);ctx.fillText('下落',PXW-200,PXH-216);
+  ctx.font=`400 18px ${FONT}`;
+  ctx.fillText('WHEREABOUTS',PXW-200,PXH-176);
+  tex.update();
+  return tex;
+}
+function nodeFace(node,num,total){
+  const tex=newTex(), ctx=tex.getContext();
+  parchment(ctx);
+  const M=110;
+  ctx.textAlign='left';ctx.textBaseline='top';
+  ctx.font=`600 50px ${FONT}`;ctx.fillStyle='#5a4426';
+  ctx.fillText(fmtDate(node.date),M,M-10);
+  ctx.strokeStyle='rgba(122,96,56,.4)';ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.moveTo(M,M+66);ctx.lineTo(PXW-M,M+66);ctx.stroke();
+  drawArt(ctx,node.art||'document',PXW/2,PXH*0.36,300,'#3b2d1a');
+  ctx.font=`400 40px ${FONT}`;ctx.fillStyle='#2c2014';
+  const lines=wrap(ctx,T(node.text),PXW-M*2);
+  let y=PXH*0.36+220;
+  for(const ln of lines){
+    if(ln===''){y+=30;continue;}
+    ctx.fillText(ln,M,y);y+=66;
+  }
+  // 本頁資料來源
+  if(node.source){
+    ctx.strokeStyle='rgba(122,96,56,.35)';
+    ctx.beginPath();ctx.moveTo(M,PXH-208);ctx.lineTo(PXW-M,PXH-208);ctx.stroke();
+    ctx.font=`400 27px ${FONT}`;ctx.fillStyle='#7a6038';
+    ctx.fillText(S('srcLabel',T(node.source.name)),M,PXH-186);
+    ctx.font=`400 21px ${FONT}`;ctx.fillStyle='#9a8868';
+    let u=String(node.source.url).replace(/^https?:\/\//,'');
+    if(u.length>56)u=u.slice(0,55)+'…';
+    ctx.fillText(u,M,PXH-144);
+  }
+  if(node.video){
+    ctx.font=`400 21px ${FONT}`;
+    ctx.fillStyle='#8a5a30';
+    ctx.fillText(S('videoNote'),M,PXH-108);
+  }
+  ctx.textAlign='center';ctx.font=`400 26px ${FONT}`;ctx.fillStyle='#8a7350';
+  ctx.fillText(`— ${num} / ${total} —`,PXW/2,PXH-66);
+  tex.update();
+  return tex;
+}
+function stuckFace(text){
+  const tex=newTex(), ctx=tex.getContext();
+  parchment(ctx);
+  ctx.save();
+  ctx.translate(PXW/2,PXH/2);ctx.rotate(-.03);
+  ctx.fillStyle='rgba(0,0,0,.18)';
+  ctx.fillRect(-PXW/2+96,-PXH/2+248,PXW-176,PXH-510);
+  ctx.fillStyle='#e8d36b';
+  ctx.fillRect(-PXW/2+88,-PXH/2+240,PXW-176,PXH-510);
+  ctx.fillStyle='rgba(255,255,255,.45)';
+  ctx.fillRect(-70,-PXH/2+226,140,34);
+  ctx.fillStyle='#8a3a22';ctx.textAlign='left';ctx.textBaseline='top';
+  ctx.font=`600 44px ${FONT}`;
+  ctx.fillText(S('stuckLabel'),-PXW/2+150,-PXH/2+320);
+  ctx.font=`400 38px ${FONT}`;ctx.fillStyle='#3a3016';
+  const lines=wrap(ctx,T(text),PXW-330);
+  let y=-PXH/2+420;
+  for(const ln of lines){
+    if(ln===''){y+=28;continue;}
+    ctx.fillText(ln,-PXW/2+150,y);y+=62;
+  }
+  ctx.restore();
+  tex.update();
+  return tex;
+}
+function outcomeFace(ev){
+  const tex=newTex(), ctx=tex.getContext();
+  parchment(ctx);
+  // 結案章
+  ctx.save();ctx.translate(PXW/2,PXH*0.22);ctx.rotate(-.06);
+  ctx.strokeStyle='rgba(150,60,50,.6)';ctx.lineWidth=5;
+  ctx.font=`600 46px ${FONT}`;ctx.textAlign='center';ctx.textBaseline='middle';
+  const sw=ctx.measureText(S('closedStamp')).width;
+  ctx.strokeRect(-sw/2-40,-46,sw+80,92);
+  ctx.fillStyle='rgba(150,60,50,.65)';
+  ctx.fillText(S('closedStamp'),0,2);
+  ctx.restore();
+  // 日期與結局
+  const M=110;
+  ctx.textAlign='left';ctx.textBaseline='top';
+  ctx.font=`600 50px ${FONT}`;ctx.fillStyle='#5a4426';
+  ctx.fillText(fmtDate(ev.outcome.date),M,PXH*0.36);
+  ctx.strokeStyle='rgba(122,96,56,.4)';ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.moveTo(M,PXH*0.36+76);ctx.lineTo(PXW-M,PXH*0.36+76);ctx.stroke();
+  ctx.font=`400 40px ${FONT}`;ctx.fillStyle='#2c2014';
+  const lines=wrap(ctx,T(ev.outcome.text),PXW-M*2);
+  let y=PXH*0.36+140;
+  for(const ln of lines){
+    if(ln===''){y+=30;continue;}
+    ctx.fillText(ln,M,y);y+=66;
+  }
+  tex.update();
+  return tex;
+}
+function endFace(closed){
+  const tex=newTex(), ctx=tex.getContext();
+  parchment(ctx);
+  ctx.textAlign='center';ctx.textBaseline='top';
+  ctx.font=`600 56px ${FONT}`;ctx.fillStyle='#2c2014';
+  ctx.fillText(S('endTitle'),PXW/2,PXH*0.42);
+  ctx.font=`400 30px ${FONT}`;ctx.fillStyle='#6e5a3c';
+  ctx.fillText(closed?S('endClosed'):S('endOpen'),PXW/2,PXH*0.42+110);
+  tex.update();
+  return tex;
+}
+function pendingFace(){
+  const tex=newTex(), ctx=tex.getContext();
+  parchment(ctx);
+  ctx.textAlign='center';ctx.textBaseline='top';
+  ctx.font=`600 56px ${FONT}`;ctx.fillStyle='#2c2014';
+  ctx.fillText(S('pendingTitle'),PXW/2,PXH*0.42);
+  ctx.font=`400 30px ${FONT}`;ctx.fillStyle='#6e5a3c';
+  ctx.fillText(S('pendingSub'),PXW/2,PXH*0.42+110);
+  tex.update();
+  return tex;
+}
+function blankFaceTex(){
+  const tex=newTex();
+  parchment(tex.getContext());
+  tex.update();
+  return tex;
+}
+
+/* 卷宗 → faces（每張紙正反兩面，含每面 meta：來源 / 影像） */
+const faceCache={};
+function getFaces(ev){
+  if(faceCache[ev.id])return faceCache[ev.id];
+  const flow=[];
+  if(ev.timeline){
+    ev.timeline.forEach((n,i)=>flow.push({tex:nodeFace(n,i+1,ev.timeline.length),
+      meta:{src:n.source||null,video:n.video||null}}));
+    if(ev.status!=='closed'&&ev.stuck)flow.push({tex:stuckFace(ev.stuck),meta:{}});
+    if(ev.status==='closed'&&ev.outcome)flow.push({tex:outcomeFace(ev),meta:{}});
+  }else{
+    flow.push({tex:pendingFace(),meta:{}});
+  }
+  flow.push({tex:endFace(ev.status==='closed'),meta:{}});
+  if(flow.length%2)flow.push({tex:blankFaceTex(),meta:{}});
+  const faces=[{front:coverFace(ev),back:insideFace(),frontMeta:{},backMeta:{}}];
+  for(let i=0;i<flow.length;i+=2){
+    faces.push({front:flow[i].tex,back:flow[i+1].tex,
+      frontMeta:flow[i].meta,backMeta:flow[i+1].meta});
+  }
+  faceCache[ev.id]=faces;
+  return faces;
+}
+
+/* ---------------- 自訂頁面 mesh ---------------- */
+function buildPage(name,x0,x1,H,segX,segZ){
+  const pos=[],nor=[],uvs=[],idx=[];
+  for(let j=0;j<=segZ;j++){
+    const z=-H/2+H*j/segZ;
+    for(let i=0;i<=segX;i++){
+      const x=x0+(x1-x0)*i/segX;
+      pos.push(x,0,z);
+      nor.push(0,1,0);
+      uvs.push(i/segX, 0.5 - z/H);
+    }
+  }
+  const n=(i,j)=>j*(segX+1)+i;
+  for(let j=0;j<segZ;j++)for(let i=0;i<segX;i++){
+    const A=n(i,j),B=n(i+1,j),C=n(i,j+1),D=n(i+1,j+1);
+    idx.push(A,B,C, B,D,C);          // Babylon RH 模式的正面 winding
+  }
+  const mesh=new BABYLON.Mesh(name,scene);
+  const vd=new BABYLON.VertexData();
+  vd.positions=pos;vd.normals=nor;vd.uvs=uvs;vd.indices=idx;
+  vd.applyToMesh(mesh);
+  return mesh;
+}
+
+/* ---------------- 房間：地板 / 牆 / 窗 / 書架 ---------------- */
+(function floor(){
+  const tex=newTex(512,512), ctx=tex.getContext();
+  ctx.fillStyle='#241608';ctx.fillRect(0,0,512,512);
+  for(let p=0;p<8;p++){
+    const y0=p*64, sh=18+Math.random()*14;
+    ctx.fillStyle=`rgb(${40+sh},${26+sh*.6},${12+sh*.3})`;
+    ctx.fillRect(0,y0,512,62);
+    ctx.fillStyle='rgba(0,0,0,.45)';ctx.fillRect(0,y0+62,512,2);
+    for(let i=0;i<260;i++){
+      ctx.fillStyle=`rgba(0,0,0,${.04+Math.random()*.06})`;
+      ctx.fillRect(Math.random()*512,y0+Math.random()*62,14+Math.random()*40,1);
+    }
+  }
+  tex.update();
+  tex.uScale=7;tex.vScale=7;
+  tex.wrapU=tex.wrapV=BABYLON.Texture.WRAP_ADDRESSMODE;
+  const g=BABYLON.MeshBuilder.CreateGround('floor',{width:80,height:80},scene);
+  const m=new BABYLON.StandardMaterial('floorM',scene);
+  m.diffuseTexture=tex;m.specularColor=new BABYLON.Color3(.03,.02,.01);
+  g.material=m;
+})();
+(function wallAndWindow(){
+  const wall=BABYLON.MeshBuilder.CreatePlane('wall',{width:70,height:24},scene);
+  wall.position.set(0,12,-17);
+  const wm=new BABYLON.StandardMaterial('wallM',scene);
+  wm.diffuseColor=BABYLON.Color3.FromHexString('#14100b');
+  wm.specularColor=BABYLON.Color3.Black();
+  wm.backFaceCulling=false;
+  wall.material=wm;
+  const winM=new BABYLON.StandardMaterial('winM',scene);
+  winM.emissiveColor=BABYLON.Color3.FromHexString('#9fb4d8').scale(.8);
+  winM.disableLighting=true;winM.backFaceCulling=false;winM.alpha=.6;
+  const win=BABYLON.MeshBuilder.CreatePlane('win',{width:3.4,height:5.2},scene);
+  win.position.set(-8.5,8.8,-16.9);win.material=winM;
+  const barM=new BABYLON.StandardMaterial('barM',scene);
+  barM.emissiveColor=BABYLON.Color3.Black();barM.disableLighting=true;barM.backFaceCulling=false;
+  const b1=BABYLON.MeshBuilder.CreatePlane('b1',{width:.16,height:5.2},scene);
+  b1.position.set(-8.5,8.8,-16.85);b1.material=barM;
+  const b2=BABYLON.MeshBuilder.CreatePlane('b2',{width:3.4,height:.16},scene);
+  b2.position.set(-8.5,8.8,-16.85);b2.material=barM;
+})();
+/* 書架：已結案的書（裝飾，不互動） */
+(function shelf(){
+  const root=new BABYLON.TransformNode('shelf',scene);
+  root.position.set(2.2,0,-9.2);
+  const woodM=new BABYLON.StandardMaterial('shelfM',scene);
+  woodM.diffuseColor=BABYLON.Color3.FromHexString('#2a1a0c');
+  woodM.specularColor=new BABYLON.Color3(.04,.03,.02);
+  const mk=(w,h,d,x,y,z)=>{
+    const b=BABYLON.MeshBuilder.CreateBox('s',{width:w,height:h,depth:d},scene);
+    b.position.set(x,y,z);b.parent=root;b.material=woodM;return b;
+  };
+  mk(.2,6.2,1.2,-4.3,3.1,0); mk(.2,6.2,1.2,4.3,3.1,0);
+  mk(8.8,6.2,.1,0,3.1,-.6);
+  mk(8.6,.14,1.15,0,.4,0); mk(8.6,.14,1.15,0,2.35,0);
+  mk(8.6,.14,1.15,0,4.3,0); mk(8.6,.14,1.15,0,6.2,0);
+  const spineCols=['#5a3a2a','#3e4a3a','#2e3a4e','#5a4a2a','#4a2e3a','#3a3a3a'].map(c=>{
+    const m=new BABYLON.StandardMaterial('sp'+c,scene);
+    m.diffuseColor=BABYLON.Color3.FromHexString(c);
+    m.specularColor=new BABYLON.Color3(.05,.04,.03);
+    return m;
+  });
+  for(const rowY of[.47,2.42,4.37]){
+    let x=-4.05;
+    while(x<3.9){
+      const w=.28+Math.random()*.22, h=1.25+Math.random()*.45;
+      if(Math.random()<.08){x+=.5;continue;}
+      const b=BABYLON.MeshBuilder.CreateBox('bk',{width:w,height:h,depth:.92},scene);
+      b.position.set(x+w/2,rowY+h/2,.02);
+      b.rotation.y=(Math.random()-.5)*.04;
+      b.parent=root;
+      b.material=spineCols[(Math.random()*spineCols.length)|0];
+      x+=w+.05;
+    }
+  }
+})();
+
+/* 飄塵 */
+if(!REDUCED){
+  const dot=newTex(64,64), dctx=dot.getContext();
+  const dg=dctx.createRadialGradient(32,32,2,32,32,30);
+  dg.addColorStop(0,'rgba(255,228,180,1)');dg.addColorStop(1,'rgba(255,228,180,0)');
+  dctx.clearRect(0,0,64,64);dctx.fillStyle=dg;dctx.fillRect(0,0,64,64);
+  dot.update();dot.hasAlpha=true;
+  const ps=new BABYLON.ParticleSystem('dust',220,scene);
+  ps.particleTexture=dot;
+  ps.emitter=BABYLON.Vector3.Zero();
+  ps.minEmitBox=new BABYLON.Vector3(-9,0,-9);
+  ps.maxEmitBox=new BABYLON.Vector3(9,8,9);
+  ps.direction1=new BABYLON.Vector3(-.03,.05,-.03);
+  ps.direction2=new BABYLON.Vector3(.03,.12,.03);
+  ps.minEmitPower=.2;ps.maxEmitPower=.6;
+  ps.minSize=.03;ps.maxSize=.08;
+  ps.minLifeTime=7;ps.maxLifeTime=14;
+  ps.emitRate=15;
+  ps.blendMode=BABYLON.ParticleSystem.BLENDMODE_ADD;
+  ps.color1=new BABYLON.Color4(1,.86,.63,.22);
+  ps.color2=new BABYLON.Color4(1,.8,.55,.3);
+  ps.colorDead=new BABYLON.Color4(0,0,0,0);
+  ps.updateSpeed=.012;
+  ps.preWarmCycles=200;
+  ps.start();
+}
+
+/* ---------------- 地上卷宗 ---------------- */
+const FLOOR_SCALE=.55;
+const FLOOR_POSES=[
+  [-6.2, 2.6,  .40],[-5.8,-0.6, -.30],[-3.2, 3.4, -.60],[-2.9, 0.4,  .20],
+  [-0.4,-1.8,  .50],[ 0.2, 2.2, -.15],[ 2.6, 3.6,  .55],[ 2.9, 0.6, -.45],
+  [ 5.4, 2.4,  .10],[ 5.8,-0.8, -.55],[-0.2, 5.2,  .30],[ 3.0, 5.8, -.20],
+];
+function poseOf(i){                  // 超過預設 12 格時以黃金角散布
+  if(FLOOR_POSES[i])return FLOOR_POSES[i];
+  const a=i*2.39996, r=2.4+(i%5)*.95;
+  return [Math.max(-6.6,Math.min(6.6,Math.cos(a)*r)),
+          Math.max(-1.8,Math.min(6.4,2.2+Math.sin(a)*r*.7)),
+          ((i*73)%100)/100-.5];
+}
+const floorBooks=[];
+function buildFloor(){
+  EVENTS.forEach((ev,i)=>{
+    const cat=CATS[ev.cat];
+    const root=new BABYLON.TransformNode('ev'+i,scene);
+    const [px,pz,ry]=poseOf(i);
+    root.position.set(px,0,pz);
+    root.rotationQuaternion=BABYLON.Quaternion.FromEulerAngles(0,ry,0);
+    root.scaling.setAll(FLOOR_SCALE);
+    const dustMix=ev.dust*.13;                 // 越久沒進展越灰
+    const grey=BABYLON.Color3.FromHexString('#6a6258');
+    const box=BABYLON.MeshBuilder.CreateBox('box'+i,{width:PW+0.16,height:TH2,depth:PH+0.16},scene);
+    box.position.set((PW+0.16)/2,TH2/2+0.001,0);
+    box.parent=root;
+    const lm=new BABYLON.StandardMaterial('lm'+i,scene);
+    lm.diffuseColor=BABYLON.Color3.Lerp(BABYLON.Color3.FromHexString(cat.leather[1]),grey,dustMix);
+    lm.specularColor=new BABYLON.Color3(.06,.05,.04);
+    box.material=lm;
+    const cover=buildPage('cv'+i,0,PW+0.16,PH+0.16,1,1);
+    cover.position.y=TH2+0.004;
+    cover.parent=root;
+    const cm=new BABYLON.StandardMaterial('cm'+i,scene);
+    cm.diffuseTexture=floorCover(ev);
+    cm.diffuseColor=BABYLON.Color3.Lerp(BABYLON.Color3.White(),grey,dustMix);
+    cm.specularColor=new BABYLON.Color3(.08,.07,.05);
+    cm.backFaceCulling=false;
+    cover.material=cm;
+    // 便條紙
+    const note=buildPage('nt'+i,-0.5,0.5,1.0,1,1);
+    note.position.set((PW+0.16)/2+0.25,TH2+0.012,0.32);
+    note.rotation.y=.12+(Math.random()-.5)*.15;
+    note.parent=root;
+    const nm=new BABYLON.StandardMaterial('nm'+i,scene);
+    nm.diffuseTexture=noteTexOf(ev);
+    nm.specularColor=BABYLON.Color3.Black();
+    nm.backFaceCulling=false;
+    note.material=nm;
+    box.metadata=cover.metadata=note.metadata={bookIndex:i};
+    floorBooks.push({root,noteMat:nm,ev});
+  });
+}
+const pickPredicate=m=>m.metadata&&m.metadata.bookIndex!==undefined;
+
+/* ---------------- 閱讀 rig ---------------- */
+const rig=new BABYLON.TransformNode('rig',scene);
+rig.setEnabled(false);
+function bakedBox(name,w,h,d,tx,ty,tz){
+  const m=BABYLON.MeshBuilder.CreateBox(name,{width:w,height:h,depth:d},scene);
+  m.bakeTransformIntoVertices(BABYLON.Matrix.Translation(tx,ty,tz));
+  m.parent=rig;
+  return m;
+}
+const boardMat=new BABYLON.StandardMaterial('board',scene);
+boardMat.specularColor=new BABYLON.Color3(.06,.05,.04);
+const boardL=bakedBox('boardL',PW+0.17,.06,PH+0.16,-(PW+0.17)/2,-.03,0);
+const boardR=bakedBox('boardR',PW+0.17,.06,PH+0.16, (PW+0.17)/2,-.03,0);
+boardL.material=boardR.material=boardMat;
+const paperMat=new BABYLON.StandardMaterial('paper',scene);
+paperMat.diffuseColor=BABYLON.Color3.FromHexString('#d9cbab');
+paperMat.specularColor=new BABYLON.Color3(.04,.04,.03);
+const stackL=bakedBox('stackL',PW-0.04,1,PH-0.04,-(PW-0.04)/2,.5,0);
+const stackR=bakedBox('stackR',PW-0.04,1,PH-0.04, (PW-0.04)/2,.5,0);
+stackL.material=stackR.material=paperMat;
+const matL=new BABYLON.StandardMaterial('pgL',scene);
+const matR=new BABYLON.StandardMaterial('pgR',scene);
+matL.specularColor=matR.specularColor=new BABYLON.Color3(.05,.05,.04);
+matL.backFaceCulling=matR.backFaceCulling=false;
+const pageL=buildPage('pageL',-PW,0,PH,1,1); pageL.parent=rig; pageL.material=matL;
+const pageR=buildPage('pageR', 0,PW,PH,1,1); pageR.parent=rig; pageR.material=matR;
+/* 手上書封面上的便條紙（撕掉動畫用） */
+const rigNote=buildPage('rigNote',-0.5,0.5,1.0,1,1);
+rigNote.parent=rig;
+rigNote.position.set(PW*0.55,THICK+0.02,0.32);
+rigNote.rotation.y=.1;
+const rigNoteMat=new BABYLON.StandardMaterial('rigNoteM',scene);
+rigNoteMat.specularColor=BABYLON.Color3.Black();
+rigNoteMat.backFaceCulling=false;
+rigNote.material=rigNoteMat;
+rigNote.setEnabled(false);
+
+/* page curl shader（解析法線） */
+BABYLON.Effect.ShadersStore['flipVertexShader']=`
+precision highp float;
+attribute vec3 position; attribute vec2 uv;
+uniform mat4 worldViewProjection; uniform mat4 world;
+uniform float uProgress; uniform float uBend; uniform float uW;
+varying vec2 vUv; varying vec3 vWorld; varying vec3 vNorm;
+const float PI=3.14159265;
+void main(){
+  vUv=uv;
+  float a=uProgress*PI;
+  float th =a+uBend*sin(uv.x*PI)*sin(a);
+  float thp=  uBend*(PI/uW)*cos(uv.x*PI)*sin(a);
+  float x=position.x;
+  vec3 p=vec3(x*cos(th), x*sin(th), position.z);
+  vec3 n=vec3(-(sin(th)+x*cos(th)*thp), cos(th)-x*sin(th)*thp, 0.0);
+  vWorld=(world*vec4(p,1.0)).xyz;
+  vNorm =normalize((world*vec4(n,0.0)).xyz);
+  gl_Position=worldViewProjection*vec4(p,1.0);
+}`;
+BABYLON.Effect.ShadersStore['flipFragmentShader']=`
+precision highp float;
+varying vec2 vUv; varying vec3 vWorld; varying vec3 vNorm;
+uniform sampler2D uFront; uniform sampler2D uBack;
+uniform vec3 uLightPos; uniform vec3 uLightColor; uniform float uLightInt;
+void main(){
+  vec3 n=normalize(vNorm);
+  vec3 base;
+  if(gl_FrontFacing){ base=texture2D(uFront,vUv).rgb; }
+  else{ base=texture2D(uBack,vec2(1.0-vUv.x,vUv.y)).rgb; n=-n; }
+  vec3 Ld=uLightPos-vWorld;
+  float dist=length(Ld); Ld/=dist;
+  float diff=max(dot(n,Ld),0.0);
+  float att=max(0.0,1.0-dist/26.0);
+  vec3 lit=base*(0.32+uLightColor*diff*uLightInt*1.5*att);
+  lit*=mix(0.74,1.0,smoothstep(0.0,0.16,vUv.x));
+  lit*=mix(1.0,0.92,smoothstep(0.75,1.0,vUv.x));
+  gl_FragColor=vec4(lit,1.0);
+}`;
+const flipMat=new BABYLON.ShaderMaterial('flipM',scene,
+  {vertex:'flip',fragment:'flip'},
+  {attributes:['position','uv'],
+   uniforms:['worldViewProjection','world','uProgress','uBend','uW','uLightPos','uLightColor','uLightInt'],
+   samplers:['uFront','uBack']});
+flipMat.backFaceCulling=false;
+flipMat.setFloat('uProgress',0);
+flipMat.setFloat('uBend',0.24);
+flipMat.setFloat('uW',PW);
+flipMat.setColor3('uLightColor',BABYLON.Color3.FromHexString('#ffb45e'));
+flipMat.setFloat('uLightInt',.75);
+const flipPage=buildPage('flipPage',0,PW,PH,48,14);
+flipPage.parent=rig;
+flipPage.material=flipMat;
+flipPage.setEnabled(false);
+
+/* ---------------- 狀態 ---------------- */
+let state='INTRO';
+let activeBook=-1;
+let faces=[], cur=0, flipping=false, flipAnim=null;
+let pickupAnim=null, tearAnim=null, walkT=-1;
+const BLANK=blankFaceTex();
+
+const hint=document.getElementById('hint');
+const folio=document.getElementById('folio');
+const downBtn=document.getElementById('down');
+const chips=document.getElementById('chips');
+function setHint(t){hint.textContent=t;hint.classList.toggle('show',!!t);}
+
+function syncBook(){
+  const N=faces.length;
+  const hR=THICK*(N-cur)/N, hL=THICK*cur/N;
+  stackR.setEnabled(hR>0.005); stackL.setEnabled(hL>0.005);
+  stackR.scaling.y=Math.max(hR,0.001); stackL.scaling.y=Math.max(hL,0.001);
+  pageR.position.y=hR+0.006; pageL.position.y=hL+0.006;
+  matR.diffuseTexture=cur<N?faces[cur].front:BLANK;
+  matL.diffuseTexture=cur>0?faces[cur-1].back:BLANK;
+  pageR.setEnabled(cur<N);
+  pageL.setEnabled(cur>0);
+  boardL.setEnabled(cur>0);
+  folio.textContent=cur===0?S('folioCover'):(cur>=N?S('folioEnd'):`${cur} / ${N-1}`);
+}
+
+/* 每頁資料來源 chips */
+function visibleMetas(){
+  if(state!=='READ'||flipping)return [];
+  const out=[];
+  const L=cur>0?faces[cur-1].backMeta:null;
+  const R=cur<faces.length?faces[cur].frontMeta:null;
+  if(isPortrait()){
+    const m=readFocus==='L'?L:R;
+    if(m)out.push(m);
+  }else{
+    if(L)out.push(L);
+    if(R)out.push(R);
+  }
+  return out.filter(m=>m&&(m.src||m.video));
+}
+function renderChips(){
+  const metas=visibleMetas();
+  chips.innerHTML='';
+  for(const m of metas){
+    if(m.src){
+      const c=document.createElement('div');
+      c.className='chip';
+      c.textContent=S('chipSrc',T(m.src.name));
+      c.onclick=e=>{e.stopPropagation();window.open(m.src.url,'_blank','noopener');};
+      chips.appendChild(c);
+    }
+    if(m.video){
+      const v=document.createElement('div');
+      v.className='chip video';
+      v.textContent=S('chipVideo');
+      v.onclick=e=>{e.stopPropagation();openVideo(m.video);};
+      chips.appendChild(v);
+    }
+  }
+  chips.classList.toggle('show',metas.length>0);
+}
+/* 影像附件 modal */
+const vmodal=document.getElementById('vmodal');
+const vframe=document.getElementById('vframe');
+const vlink=document.getElementById('vlink');
+function openVideo(id){
+  vframe.src=`https://www.youtube.com/embed/${id}`;
+  vlink.href=`https://www.youtube.com/watch?v=${id}`;
+  vmodal.classList.add('show');
+}
+function closeVideo(){vmodal.classList.remove('show');vframe.src='';}
+document.getElementById('vclose').addEventListener('pointerdown',e=>{e.stopPropagation();closeVideo();});
+vmodal.addEventListener('pointerdown',e=>{if(e.target===vmodal){e.stopPropagation();closeVideo();}});
+
+/* ---------------- 語言切換 ---------------- */
+function applyDom(){
+  document.documentElement.lang=LANG==='zh'?'zh-Hant':'en';
+  document.body.dataset.lang=LANG;
+  document.getElementById('intro-title').textContent=S('introTitle');
+  document.getElementById('intro-line').innerHTML=S('introLine');
+  document.getElementById('intro-go').textContent=S('introGo');
+  downBtn.textContent=S('putBack');
+  vlink.textContent=S('vOpen');
+  document.getElementById('vclose').textContent=S('vClose');
+  document.querySelectorAll('#lang button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.lang===LANG)));
+}
+function setLang(l){
+  if(l===LANG)return;
+  if(flipping){pendingLang=l;return;}   // 翻頁中先記下，翻完再切
+  LANG=l;
+  localStorage.setItem('wb-lang',l);
+  applyDom();
+  // 重畫地上的便條紙
+  for(const fb of floorBooks){
+    const old=fb.noteMat.diffuseTexture;
+    fb.noteMat.diffuseTexture=noteTexOf(fb.ev);
+    if(old)old.dispose();
+  }
+  // 清掉所有已生成的頁面（換語言要重畫）
+  for(const k of Object.keys(faceCache)){
+    for(const f of faceCache[k]){f.front.dispose();f.back.dispose();}
+    delete faceCache[k];
+  }
+  if(activeBook>=0&&(state==='READ'||state==='TEAR'||state==='PICKUP')){
+    faces=getFaces(EVENTS[activeBook]);
+    rigNoteMat.diffuseTexture=noteTexOf(EVENTS[activeBook]);
+    syncBook();renderChips();
+  }
+  if(state==='CHOOSE')setHint(S('hintChoose',EVENTS.length));
+  else if(state==='WAITDATA')setHint(DATA_ERR?S('loadFail',DATA_ERR):S('loading'));
+}
+document.querySelectorAll('#lang button').forEach(b=>{
+  b.addEventListener('pointerdown',e=>e.stopPropagation());
+  b.addEventListener('click',()=>setLang(b.dataset.lang));
+});
+
+/* ---------------- 相機 ---------------- */
+const camPos=new BABYLON.Vector3(0,7.6,18);
+const camLook=new BABYLON.Vector3(0,4,0);
+const tgtPos=camPos.clone(), tgtLook=camLook.clone();
+const aspect=()=>engine.getRenderWidth()/engine.getRenderHeight();
+const isPortrait=()=>aspect()<0.9;
+const RIG_POS=new BABYLON.Vector3(0,4.0,3.4);
+const RIG_TILT=0.55;
+const READ_DIR=new BABYLON.Vector3(0,0.62,1).normalize();
+function fitDist(){
+  const tanV=Math.tan(camera.fov/2);
+  const tanH=tanV*aspect();
+  const halfW=isPortrait()?PW*0.62:PW+0.55;
+  const halfH=PH*0.6;
+  return Math.max(halfW/tanH,halfH/tanV)+0.4;
+}
+let readFocus='R';
+function readCamTargets(){
+  const d=fitDist();
+  const xo=isPortrait()?(readFocus==='R'?PW*0.45:-PW*0.45):0;
+  tgtPos.copyFrom(RIG_POS).addInPlace(READ_DIR.scale(d));
+  tgtPos.x+=xo;
+  tgtLook.set(RIG_POS.x+xo,RIG_POS.y+0.25,RIG_POS.z-0.15);
+}
+function chooseCamTargets(){
+  const tanV=Math.tan(camera.fov/2), tanH=tanV*aspect();
+  const d=Math.max(7.4/tanH, 3.0/tanV, 7.6);
+  const dir=new BABYLON.Vector3(0,.62,1).normalize();
+  tgtPos.set(0,0.6,1.2).addInPlace(dir.scale(d));
+  tgtLook.set(0,0.4,0.8);
+}
+
+/* ---------------- 動畫 ---------------- */
+const easeInOut=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
+function startWalk(){
+  state='WALK';
+  document.getElementById('intro').classList.add('gone');
+  walkT=0;
+}
+function startPickup(i){
+  state='PICKUP';
+  activeBook=i;
+  setHint('');
+  const ev=EVENTS[i];
+  faces=getFaces(ev);
+  cur=0; readFocus='R';
+  boardMat.diffuseColor=BABYLON.Color3.FromHexString(CATS[ev.cat].leather[1]);
+  rigNoteMat.diffuseTexture=noteTexOf(ev);
+  const root=floorBooks[i].root;
+  pickupAnim={node:root,
+    fromP:root.position.clone(), fromQ:root.rotationQuaternion.clone(),
+    fromS:FLOOR_SCALE, toS:1,
+    toP:RIG_POS.clone(), toQ:BABYLON.Quaternion.FromEulerAngles(RIG_TILT,0,0),
+    t0:performance.now(),dur:1400,reverse:false};
+  rustle(.4);
+}
+function startTear(){
+  state='TEAR';
+  rigNote.setEnabled(true);
+  rigNoteMat.alpha=1;
+  rigNote.position.set(PW*0.55,THICK+0.02,0.32);
+  rigNote.rotation.set(0,.1,0);
+  tearAnim={t0:performance.now()+350,dur:850};   // 停 0.35s 再撕
+  tear_sound_pending=true;
+}
+let tear_sound_pending=false;
+function startPutback(){
+  if(state!=='READ'||flipping)return;
+  state='PUTBACK';
+  downBtn.classList.remove('show');
+  folio.classList.remove('show');
+  chips.classList.remove('show');
+  closeVideo();
+  rig.setEnabled(false);
+  const root=floorBooks[activeBook].root;
+  root.setEnabled(true);
+  root.position.copyFrom(RIG_POS);
+  root.rotationQuaternion=BABYLON.Quaternion.FromEulerAngles(RIG_TILT,0,0);
+  const [px,pz,ry]=poseOf(activeBook);
+  pickupAnim={node:root,
+    fromP:RIG_POS.clone(), fromQ:root.rotationQuaternion.clone(),
+    fromS:1, toS:FLOOR_SCALE,
+    toP:new BABYLON.Vector3(px,0,pz),
+    toQ:BABYLON.Quaternion.FromEulerAngles(0,ry,0),
+    t0:performance.now(),dur:1200,reverse:true};
+  rustle(.3);
+}
+function startFlip(forward){
+  if(flipping)return;
+  if(forward&&cur>=faces.length)return;
+  if(!forward&&cur<=0)return;
+  flipping=true;
+  rustle(.55);
+  renderChips();
+  const idx=forward?cur:cur-1;
+  flipMat.setTexture('uFront',faces[idx].front);
+  flipMat.setTexture('uBack',faces[idx].back);
+  flipPage.position.y=Math.max(stackL.scaling.y,stackR.scaling.y)+0.012;
+  flipPage.setEnabled(true);
+  if(forward){
+    matR.diffuseTexture=(cur+1<faces.length)?faces[cur+1].front:BLANK;
+    flipAnim={from:0,to:1,t0:performance.now(),dur:1150,after(){cur++;}};
+  }else{
+    matL.diffuseTexture=(cur-2>=0)?faces[cur-2].back:BLANK;
+    pageL.setEnabled(cur-1>0);
+    flipAnim={from:1,to:0,t0:performance.now(),dur:1150,after(){cur--;}};
+  }
+}
+function readTap(rightSide){
+  if(flipping)return;
+  if(!isPortrait()){ startFlip(rightSide); renderChips(); return; }
+  if(rightSide){
+    if(readFocus==='L'){ readFocus='R'; renderChips(); }
+    else{
+      if(cur>=faces.length)return;
+      const wasCover=(cur===0);
+      startFlip(true);
+      flipAnim.afterFocus=wasCover?'R':'L';
+      readFocus='C';
+    }
+  }else{
+    if(readFocus==='R'&&cur>0){ readFocus='L'; renderChips(); }
+    else{
+      if(cur<=0)return;
+      startFlip(false);
+      flipAnim.afterFocus='R';
+      readFocus='C';
+    }
+  }
+}
+
+/* ---------------- 音效（合成） ---------------- */
+let actx=null;
+function ac(){return actx=actx||new (window.AudioContext||window.webkitAudioContext)();}
+function rustle(vol){
+  try{
+    const a=ac(),dur=.55,sr=a.sampleRate;
+    const buf=a.createBuffer(1,sr*dur,sr),d=buf.getChannelData(0);
+    for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/d.length,1.4);
+    const src=a.createBufferSource();src.buffer=buf;
+    const bp=a.createBiquadFilter();bp.type='bandpass';
+    bp.frequency.setValueAtTime(900,a.currentTime);
+    bp.frequency.exponentialRampToValueAtTime(2600,a.currentTime+dur*.7);
+    bp.Q.value=.8;
+    const g=a.createGain();
+    g.gain.setValueAtTime(0,a.currentTime);
+    g.gain.linearRampToValueAtTime(vol*.25,a.currentTime+.06);
+    g.gain.exponentialRampToValueAtTime(.001,a.currentTime+dur);
+    src.connect(bp).connect(g).connect(a.destination);src.start();
+  }catch(e){}
+}
+function tearSound(){
+  try{
+    const a=ac(),dur=.3,sr=a.sampleRate;
+    const buf=a.createBuffer(1,sr*dur,sr),d=buf.getChannelData(0);
+    for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/d.length,.7);
+    const src=a.createBufferSource();src.buffer=buf;
+    const bp=a.createBiquadFilter();bp.type='bandpass';
+    bp.frequency.setValueAtTime(3200,a.currentTime);
+    bp.frequency.exponentialRampToValueAtTime(1400,a.currentTime+dur);
+    bp.Q.value=.7;
+    const g=a.createGain();
+    g.gain.setValueAtTime(.12,a.currentTime);
+    g.gain.exponentialRampToValueAtTime(.001,a.currentTime+dur);
+    src.connect(bp).connect(g).connect(a.destination);src.start();
+  }catch(e){}
+}
+function footstep(){
+  try{
+    const a=ac(),t=a.currentTime;
+    const o=a.createOscillator();o.type='sine';
+    o.frequency.setValueAtTime(82,t);
+    o.frequency.exponentialRampToValueAtTime(46,t+.14);
+    const g=a.createGain();
+    g.gain.setValueAtTime(.0001,t);
+    g.gain.linearRampToValueAtTime(.10,t+.012);
+    g.gain.exponentialRampToValueAtTime(.0001,t+.2);
+    o.connect(g).connect(a.destination);o.start(t);o.stop(t+.22);
+  }catch(e){}
+}
+
+/* ---------------- 互動 ---------------- */
+const mouse={x:0,y:0};
+let hovered=null;
+addEventListener('pointermove',e=>{
+  mouse.x=(e.clientX/innerWidth)*2-1;
+  mouse.y=(e.clientY/innerHeight)*2-1;
+  if(state==='CHOOSE'&&FINE){
+    const hit=scene.pick(scene.pointerX,scene.pointerY,pickPredicate);
+    const idx=hit&&hit.hit?hit.pickedMesh.metadata.bookIndex:-1;
+    if(hovered!==null&&hovered!==idx)floorBooks[hovered].root.position.y=0;
+    hovered=idx>=0?idx:null;
+    if(hovered!==null)floorBooks[hovered].root.position.y=0.09;
+    stage.style.cursor=hovered!==null?'pointer':'default';
+  }
+});
+addEventListener('pointerdown',e=>{
+  if(vmodal.classList.contains('show'))return;
+  if(e.target.closest&&e.target.closest('.chip,#down,#lang'))return;
+  if(state==='INTRO'){startWalk();return;}
+  if(state==='CHOOSE'){
+    const hit=scene.pick(scene.pointerX,scene.pointerY,pickPredicate);
+    if(hit&&hit.hit)startPickup(hit.pickedMesh.metadata.bookIndex);
+    return;
+  }
+  if(state==='READ'){readTap(e.clientX>innerWidth/2);}
+});
+addEventListener('keydown',e=>{
+  if(vmodal.classList.contains('show')){if(e.key==='Escape')closeVideo();return;}
+  if(state==='INTRO'&&(e.key===' '||e.key==='Enter')){startWalk();return;}
+  if(state!=='READ')return;
+  if(e.key==='ArrowRight'||e.key===' ')readTap(true);
+  if(e.key==='ArrowLeft')readTap(false);
+  if(e.key==='Escape')startPutback();
+});
+downBtn.addEventListener('pointerdown',e=>{e.stopPropagation();startPutback();});
+addEventListener('resize',()=>engine.resize());
+
+/* ---------------- 主迴圈 ---------------- */
+let t0=performance.now(), lastStepPhase=1, chipFrameKey='';
+engine.runRenderLoop(()=>{
+  const t=(performance.now()-t0)/1000;
+  const fl=.75+Math.sin(t*7.3)*.05+Math.sin(t*13.7+1.3)*.035+Math.sin(t*2.1)*.025;
+  candle.intensity=fl;
+  flipMat.setFloat('uLightInt',fl);
+  flipMat.setVector3('uLightPos',candle.position);
+
+  if(state==='WALK'){
+    walkT+=0.016/3.4;
+    const e=easeInOut(Math.min(walkT,1));
+    const bob=Math.sin(walkT*3.4*PI*2.2);
+    tgtPos.set(Math.sin(walkT*3.4*PI*1.1)*.14, 7.6+(REDUCED?0:bob*.14*(1-e*.5)), 18-(18-8.6)*e);
+    tgtLook.set(0, 4.2-(4.2-0.6)*e, 0.8);
+    if(!REDUCED&&bob<-.85&&lastStepPhase>=-.85)footstep();
+    lastStepPhase=bob;
+    if(walkT>=1){
+      if(EVENTS.length){
+        state='CHOOSE';
+        setHint(S('hintChoose',EVENTS.length));
+      }else{
+        state='WAITDATA';
+        setHint(DATA_ERR?S('loadFail',DATA_ERR):S('loading'));
+      }
+    }
+  }else if(state==='CHOOSE'||state==='WAITDATA'){
+    chooseCamTargets();
+    if(FINE){
+      tgtPos.x+=mouse.x*.5; tgtPos.y+=-mouse.y*.3;
+      tgtLook.x+=mouse.x*.4;
+    }
+  }else if(state==='READ'||state==='TEAR'){
+    readCamTargets();
+    if(state==='READ'&&!REDUCED&&FINE){
+      tgtPos.x+=mouse.x*.12;
+      tgtPos.y+=-mouse.y*.08+Math.sin(t*.55)*.03;
+    }
+  }
+
+  if(pickupAnim){
+    const A=pickupAnim;
+    const k=Math.min((performance.now()-A.t0)/A.dur,1);
+    const e=easeInOut(k);
+    BABYLON.Vector3.LerpToRef(A.fromP,A.toP,e,A.node.position);
+    A.node.position.y+=Math.sin(e*PI)*(A.reverse?0.5:0.9);
+    BABYLON.Quaternion.SlerpToRef(A.fromQ,A.toQ,e,A.node.rotationQuaternion);
+    A.node.scaling.setAll(A.fromS+(A.toS-A.fromS)*e);
+    if(!A.reverse){
+      readCamTargets();
+      const cp=tgtPos.clone(), cl=tgtLook.clone();
+      chooseCamTargets();
+      BABYLON.Vector3.LerpToRef(tgtPos,cp,e,tgtPos);
+      BABYLON.Vector3.LerpToRef(tgtLook,cl,e,tgtLook);
+    }
+    if(k>=1){
+      if(!A.reverse){
+        A.node.setEnabled(false);
+        rig.position.copyFrom(RIG_POS);
+        rig.rotation.set(RIG_TILT,0,0);
+        rig.setEnabled(true);
+        syncBook();
+        startTear();           // 到手 → 撕便條
+      }else{
+        state='CHOOSE';
+        setHint(S('hintChoose',EVENTS.length));
+      }
+      pickupAnim=null;
+    }
+  }
+
+  /* 撕便條紙 */
+  if(tearAnim){
+    const now=performance.now();
+    if(now>=tearAnim.t0){
+      if(tear_sound_pending){tearSound();tear_sound_pending=false;}
+      const k=Math.min((now-tearAnim.t0)/tearAnim.dur,1);
+      const e=k*k;                                   // ease-in：先慢後快地飛走
+      rigNote.position.set(PW*0.55+e*1.6, THICK+0.02+Math.sin(e*PI)*1.1+e*.4, 0.32+e*1.3);
+      rigNote.rotation.set(-e*.9,.1+e*1.4,e*.6);
+      rigNoteMat.alpha=1-Math.max(0,(k-.55)/.45);
+      if(k>=1){
+        rigNote.setEnabled(false);
+        tearAnim=null;
+        startFlip(true);                              // 自動翻開封面
+      }
+    }
+  }
+
+  if(flipAnim){
+    const k=Math.min((performance.now()-flipAnim.t0)/flipAnim.dur,1);
+    flipMat.setFloat('uProgress',flipAnim.from+(flipAnim.to-flipAnim.from)*easeInOut(k));
+    if(k>=1){
+      flipAnim.after();
+      if(flipAnim.afterFocus)readFocus=flipAnim.afterFocus;
+      else if(!isPortrait())readFocus='R';
+      flipAnim=null;
+      flipping=false;
+      flipPage.setEnabled(false);
+      flipMat.setFloat('uProgress',0);
+      syncBook();
+      if(state==='TEAR'){                              // 開封完成 → 進入閱讀
+        state='READ';
+        folio.classList.add('show');
+        downBtn.classList.add('show');
+        setHint(isPortrait()?S('hintReadPort'):S('hintRead'));
+        setTimeout(()=>setHint(''),3800);
+      }
+      renderChips();
+      if(pendingLang){const l=pendingLang;pendingLang=null;setLang(l);}
+    }
+  }
+
+  if(state==='READ'&&readFocus==='C'){
+    const d=fitDist();
+    tgtPos.copyFrom(RIG_POS).addInPlace(READ_DIR.scale(d*1.06));
+    tgtLook.set(RIG_POS.x,RIG_POS.y+0.25,RIG_POS.z-0.15);
+  }
+
+  /* chips 隨可見頁面變化 */
+  const ck=state+'|'+cur+'|'+readFocus+'|'+flipping+'|'+LANG;
+  if(ck!==chipFrameKey){chipFrameKey=ck;renderChips();}
+
+  const k2=state==='WALK'?0.12:0.055;
+  BABYLON.Vector3.LerpToRef(camPos,tgtPos,k2,camPos);
+  BABYLON.Vector3.LerpToRef(camLook,tgtLook,k2,camLook);
+  camera.position.copyFrom(camPos);
+  camera.setTarget(camLook);
+  scene.render();
+});
+
+/* ---------------- init ---------------- */
+applyDom();
+loadData();
+</script>
+</body>
+</html>
