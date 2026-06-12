@@ -8,6 +8,9 @@
 <meta property="og:title" content="世界的下落">
 <meta property="og:description" content="有些事沒有結局，只是沒有人再問起。推門進來，撿起一本書。">
 <meta property="og:type" content="website">
+<meta property="og:url" content="https://whereabouts.skya.tw/">
+<meta property="og:image" content="https://whereabouts.skya.tw/og.png">
+<meta name="twitter:card" content="summary_large_image">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,600;1,400&family=Noto+Serif+TC:wght@400;600&display=swap" rel="stylesheet">
@@ -51,16 +54,18 @@
 
   #down{position:fixed;bottom:max(20px,env(safe-area-inset-bottom));left:20px;
     font-size:12px;letter-spacing:.25em;color:var(--dim);
-    border:1px solid rgba(138,122,95,.4);border-radius:3px;padding:9px 16px;
-    background:rgba(10,7,4,.5);backdrop-filter:blur(4px);cursor:pointer;
-    opacity:0;pointer-events:none;transition:opacity .8s ease}
+    border:none;background:none;padding:9px 12px;cursor:pointer;
+    opacity:0;pointer-events:none;transition:opacity .8s ease,color .2s}
+  #down:hover{color:var(--ink)}
   body[data-lang="en"] #down{letter-spacing:.12em}
-  #down.show{opacity:.9;pointer-events:auto}
+  #down.show{opacity:.85;pointer-events:auto}
 
-  /* 語言切換 */
+  /* 語言切換（讀書時隱藏，畫面只留書） */
   #lang{position:fixed;top:max(16px,env(safe-area-inset-top));left:18px;z-index:40;
     display:flex;gap:2px;border:1px solid rgba(138,122,95,.4);border-radius:999px;
-    padding:3px;background:rgba(10,7,4,.55);backdrop-filter:blur(4px)}
+    padding:3px;background:rgba(10,7,4,.55);backdrop-filter:blur(4px);
+    transition:opacity .6s ease}
+  #lang.hide{opacity:0;pointer-events:none}
   #lang button{font-family:inherit;font-size:11px;letter-spacing:.08em;cursor:pointer;
     border:none;background:none;color:var(--dim);padding:5px 12px;border-radius:999px}
   #lang button[aria-pressed="true"]{background:rgba(138,122,95,.32);color:#f0e4ca}
@@ -152,8 +157,6 @@ const STRINGS = {
   hintReadPort: {zh:'點右側往下讀 · 左側回看', en:'Tap right to read on · left to look back'},
   loading:      {zh:'書房還在整理…', en:'Tidying the room…'},
   loadFail:     {zh:e=>`讀取失敗（${e}）— 原始資料：events.yaml`, en:e=>`Failed to load (${e}) — raw data: events.yaml`},
-  folioCover:   {zh:'— 封面 —', en:'— Cover —'},
-  folioEnd:     {zh:'— 末頁 —', en:'— Last page —'},
   putBack:      {zh:'放 回 地 上', en:'Put it back'},
   chipSrc:      {zh:n=>`附件 · ${n} ↗`, en:n=>`Source · ${n} ↗`},
   chipVideo:    {zh:'▶ 影像附件', en:'▶ Video'},
@@ -161,14 +164,9 @@ const STRINGS = {
   vClose:       {zh:'收 起 附 件', en:'Close'},
   noteOpen:     {zh:'天，沒有下落', en:'days, no ending'},
   noteClosed:   {zh:'天 · 已結案', en:'days · closed'},
-  shelvedLabel: {zh:'這件事已被擱置', en:'This has been left for'},
-  resolvedLabel:{zh:'從立案到有下落', en:'From opening to resolution'},
-  dayUnit:      {zh:' 天', en:' days'},
   filed:        {zh:d=>`立案 ${d}`, en:d=>`Opened ${d}`},
   filedResolved:{zh:d=>`立案 ${d} · 已有下落`, en:d=>`Opened ${d} · resolved`},
   catClosed:    {zh:'已結案', en:'closed'},
-  srcLabel:     {zh:n=>`附件 · 資料來源：${n}`, en:n=>`Source · ${n}`},
-  videoNote:    {zh:'▶ 本頁有影像附件（畫面下方可播放）', en:'▶ Video attachment — playable below'},
   stuckLabel:   {zh:'故事停在這裡', en:'The story stops here'},
   closedStamp:  {zh:'結案 · CLOSED', en:'CLOSED'},
   endTitle:     {zh:'這本書，先寫到這裡。', en:'This book ends here, for now.'},
@@ -218,7 +216,15 @@ async function loadData(){
     const gather=v=>v==null?'':(typeof v==='object'?Object.values(v).map(gather).join(''):String(v));
     await ensureFonts(gather(EVENTS)+gather(STRINGS)+'0123456789');
     buildFloor();
-    if(state==='WAITDATA'){state='CHOOSE';setHint('');}
+    // Deep link：#事件id 直接站到房間裡、撿起那本書
+    const linked=EVENTS.findIndex(e=>e.id===decodeURIComponent(location.hash.slice(1)));
+    if(linked>=0&&(state==='INTRO'||state==='WAITDATA')){
+      document.getElementById('intro').classList.add('gone');
+      chooseCamTargets();
+      camPos.copyFrom(tgtPos);camLook.copyFrom(tgtLook);
+      state='CHOOSE';setHint('');
+      startPickup(linked);
+    }else if(state==='WAITDATA'){state='CHOOSE';setHint('');}
   }catch(err){
     DATA_ERR=err.message;
     if(state==='WAITDATA')setHint(S('loadFail',DATA_ERR));
@@ -509,7 +515,7 @@ function coverFace(ev){
   ctx.lineWidth=3;ctx.strokeRect(56,56,PXW-112,PXH-112);
   ctx.lineWidth=1.2;ctx.strokeRect(76,76,PXW-152,PXH-152);
   ctx.globalAlpha=.16;
-  drawArt(ctx,ev.art,PXW/2,PXH*0.36,420,cat.accent);
+  drawArt(ctx,ev.art,PXW/2,PXH*0.34,400,cat.accent);
   ctx.globalAlpha=1;
   // 分類印章
   const stampTxt=T(cat.label)+(ev.status==='closed'?' · '+S('catClosed'):'');
@@ -521,24 +527,14 @@ function coverFace(ev){
   ctx.fillStyle=cat.accent;ctx.textAlign='left';ctx.textBaseline='middle';
   ctx.fillText(stampTxt,0,2);
   ctx.restore();
-  // 標題（最多三行）
+  // 標題（最多三行）——封面只留：分類章、標題、立案日（天數活在便條紙上）
   ctx.fillStyle='#e9dcc0';ctx.textAlign='center';ctx.textBaseline='top';
   ctx.font=`600 64px ${FONT}`;
   const tl=wrap(ctx,T(ev.title),PXW-220);
-  let ty=PXH*0.42;
+  let ty=PXH*0.46;
   for(const ln of tl.slice(0,3)){ctx.fillText(ln,PXW/2,ty);ty+=92;}
-  // 現況
-  ctx.font=`400 30px ${FONT}`;ctx.fillStyle='rgba(222,206,170,.78)';
-  const cl=wrap(ctx,T(ev.current),PXW-260);
-  ty+=24;
-  for(const ln of cl){ctx.fillText(ln,PXW/2,ty);ty+=48;}
-  // 擱置天數 / 結案天數
-  ctx.font=`400 26px ${FONT}`;ctx.fillStyle='rgba(200,182,148,.7)';
-  ctx.fillText(ev.status==='closed'?S('resolvedLabel'):S('shelvedLabel'),PXW/2,PXH-300);
-  ctx.font=`600 96px ${FONT}`;ctx.fillStyle=cat.accent;
-  ctx.fillText(`${ev.noteDays}${S('dayUnit')}`,PXW/2,PXH-256);
   ctx.font=`400 24px ${FONT}`;ctx.fillStyle='rgba(200,182,148,.6)';
-  ctx.fillText(ev.status==='closed'?S('filedResolved',fmtDate(ev.start)):S('filed',fmtDate(ev.start)),PXW/2,PXH-120);
+  ctx.fillText(ev.status==='closed'?S('filedResolved',fmtDate(ev.start)):S('filed',fmtDate(ev.start)),PXW/2,PXH-130);
   tex.update();
   return tex;
 }
@@ -560,12 +556,21 @@ function noteTexOf(ev){             // 便條紙：擱置天數
   tex.update();
   return tex;
 }
-function insideFace(){
+function insideFace(ev){
   const tex=newTex(), ctx=tex.getContext();
   parchment(ctx);
+  // 現況（summary）從封面移到內封：翻開才知道這件事此刻停在哪裡
+  ctx.fillStyle='#4a3b26';ctx.textAlign='center';ctx.textBaseline='top';
+  ctx.font=`400 38px ${FONT}`;
+  const lines=wrap(ctx,T(ev.current),PXW-300);
+  let y=PXH*0.40-lines.length*31;
+  for(const ln of lines){
+    if(ln===''){y+=28;continue;}
+    ctx.fillText(ln,PXW/2,y);y+=62;
+  }
   ctx.strokeStyle='rgba(150,60,50,.5)';ctx.lineWidth=4;
   ctx.beginPath();ctx.arc(PXW-200,PXH-230,86,0,PI*2);ctx.stroke();
-  ctx.fillStyle='rgba(150,60,50,.55)';ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.fillStyle='rgba(150,60,50,.55)';ctx.textBaseline='middle';
   ctx.font=`600 30px ${FONT}`;
   ctx.fillText('世界的',PXW-200,PXH-262);ctx.fillText('下落',PXW-200,PXH-216);
   ctx.font=`400 18px ${FONT}`;
@@ -582,30 +587,15 @@ function nodeFace(node,num,total){
   ctx.fillText(fmtDate(node.date),M,M-10);
   ctx.strokeStyle='rgba(122,96,56,.4)';ctx.lineWidth=1.5;
   ctx.beginPath();ctx.moveTo(M,M+66);ctx.lineTo(PXW-M,M+66);ctx.stroke();
-  drawArt(ctx,node.art||'document',PXW/2,PXH*0.36,300,'#3b2d1a');
+  drawArt(ctx,node.art||'document',PXW/2,PXH*0.33,240,'#3b2d1a');
   ctx.font=`400 40px ${FONT}`;ctx.fillStyle='#2c2014';
   const lines=wrap(ctx,T(node.text),PXW-M*2);
-  let y=PXH*0.36+220;
+  let y=PXH*0.33+190;
   for(const ln of lines){
     if(ln===''){y+=30;continue;}
     ctx.fillText(ln,M,y);y+=66;
   }
-  // 本頁資料來源
-  if(node.source){
-    ctx.strokeStyle='rgba(122,96,56,.35)';
-    ctx.beginPath();ctx.moveTo(M,PXH-208);ctx.lineTo(PXW-M,PXH-208);ctx.stroke();
-    ctx.font=`400 27px ${FONT}`;ctx.fillStyle='#7a6038';
-    ctx.fillText(S('srcLabel',T(node.source.name)),M,PXH-186);
-    ctx.font=`400 21px ${FONT}`;ctx.fillStyle='#9a8868';
-    let u=String(node.source.url).replace(/^https?:\/\//,'');
-    if(u.length>56)u=u.slice(0,55)+'…';
-    ctx.fillText(u,M,PXH-144);
-  }
-  if(node.video){
-    ctx.font=`400 21px ${FONT}`;
-    ctx.fillStyle='#8a5a30';
-    ctx.fillText(S('videoNote'),M,PXH-108);
-  }
+  // 來源不印在紙上：畫面下方的 chips 是唯一入口，頁面保持乾淨
   ctx.textAlign='center';ctx.font=`400 26px ${FONT}`;ctx.fillStyle='#8a7350';
   ctx.fillText(`— ${num} / ${total} —`,PXW/2,PXH-66);
   tex.update();
@@ -722,7 +712,7 @@ function getFaces(ev){
   }
   flow.push({tex:endFace(ev.status==='closed'),meta:{}});
   if(flow.length%2)flow.push({tex:leatherInsideFace(ev),meta:{}});
-  const faces=[{front:coverFace(ev),back:insideFace(),frontMeta:{},backMeta:{}}];
+  const faces=[{front:coverFace(ev),back:insideFace(ev),frontMeta:{},backMeta:{}}];
   for(let i=0;i<flow.length;i+=2){
     faces.push({front:flow[i].tex,back:flow[i+1].tex,
       frontMeta:flow[i].meta,backMeta:flow[i+1].meta});
@@ -1036,7 +1026,7 @@ function syncBook(){
   pageR.setEnabled(cur<N);
   pageL.setEnabled(cur>0);
   boardL.setEnabled(cur>0);
-  folio.textContent=cur===0?S('folioCover'):(cur>=N?S('folioEnd'):`${cur} / ${N-1}`);
+  folio.textContent=(cur>0&&cur<N)?`${cur} / ${N-1}`:'';   // 封面與末頁不需要標示
 }
 
 /* 每頁資料來源 chips */
@@ -1171,6 +1161,7 @@ function chooseCamTargets(){
 /* ---------------- 動畫 ---------------- */
 const easeInOut=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
 function startWalk(){
+  if(state!=='INTRO')return;
   state='WALK';
   document.getElementById('intro').classList.add('gone');
   walkT=0;
@@ -1180,26 +1171,28 @@ let introBusy=false;
 const introTitleEl=document.getElementById('intro-title');
 const introLineEl=document.getElementById('intro-line');
 const PAUSE_CH='，。、；：？！…—,.;:?!';
-function typeText(el,text){
+function typeText(el,text,done){
   el.textContent='';
-  if(REDUCED){el.textContent=text;return;}
+  if(REDUCED){el.textContent=text;done&&done();return;}
   let i=0;
   const step=()=>{
     i++;
     el.textContent=text.slice(0,i);
-    if(i>=text.length){typing=null;return;}
+    if(i>=text.length){typing=null;done&&done();return;}
     let d=LANG==='en' ? 60+Math.random()*110 : 150+Math.random()*180;  // 真人打字：速度不均
     if(PAUSE_CH.includes(text[i-1])) d+=420+Math.random()*380;          // 標點後自然停頓
     else if(Math.random()<.08) d+=200+Math.random()*260;                // 偶爾想一下
     typing.timer=setTimeout(step,d);
   };
-  typing={el,text,timer:setTimeout(step,300+Math.random()*250)};
+  typing={el,text,done,timer:setTimeout(step,300+Math.random()*250)};
 }
 function finishTyping(){
   if(!typing)return;
   clearTimeout(typing.timer);
   typing.el.textContent=typing.text;
+  const done=typing.done;
   typing=null;
+  done&&done();
 }
 function fadeThen(el,cb){
   if(REDUCED){el.classList.add('faded');cb();return;}
@@ -1225,13 +1218,19 @@ function introTap(){
     });
   }else if(introStage===1){
     introStage=2; introBusy=true;
-    fadeThen(introLineEl,()=>{resetLine();introBusy=false;typeText(introLineEl,S('introLine2'));});
+    fadeThen(introLineEl,()=>{
+      resetLine();introBusy=false;
+      // 第二句打完，停一拍自動走進房間（不需要再點一次）
+      typeText(introLineEl,S('introLine2'),()=>setTimeout(startWalk,1600));
+    });
   }else startWalk();
 }
 function startPickup(i){
   state='PICKUP';
   activeBook=i;
   setHint('');
+  document.getElementById('lang').classList.add('hide');
+  history.replaceState(null,'','#'+EVENTS[i].id);          // deep link：網址跟著手上的書
   const ev=EVENTS[i];
   faces=getFaces(ev);
   cur=0; readFocus='R';
@@ -1258,6 +1257,8 @@ let tear_sound_pending=false;
 function startPutback(){
   if(state!=='READ'||flipping)return;
   state='PUTBACK';
+  document.getElementById('lang').classList.remove('hide');
+  history.replaceState(null,'',location.pathname+location.search);
   downBtn.classList.remove('show');
   folio.classList.remove('show');
   chips.classList.remove('show');
@@ -1390,7 +1391,7 @@ const mouse={x:0,y:0};
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 let hovered=null;
 let viewYaw=0, viewPitch=0, viewZoom=1;   // 房間內：拖曳旋轉（yaw 不設限＝360°）＋縮放
-let lookDrag=null, pinch=null;
+let lookDrag=null, pinch=null, readPtr=null;
 const touches=new Map();                  // 進行中的觸點（雙指縮放用）
 const touchDist=()=>{
   const p=[...touches.values()];
@@ -1438,13 +1439,21 @@ addEventListener('pointerdown',e=>{
     return;
   }
   if(state==='INTRO'){introTap();return;}
-  if(state==='READ'){readTap(e.clientX>innerWidth/2);}
+  if(state==='READ'){readPtr={x:e.clientX,y:e.clientY};return;}
 });
 function endPointer(e){
   touches.delete(e.pointerId);
   if(touches.size<2)pinch=null;
 }
 addEventListener('pointerup',e=>{
+  if(readPtr&&state==='READ'){               // 點一下翻頁；往下滑＝放回地上
+    const dx=e.clientX-readPtr.x, dy=e.clientY-readPtr.y;
+    const px=readPtr.x; readPtr=null;
+    if(dy>80&&Math.abs(dy)>Math.abs(dx)*1.5){startPutback();return;}
+    if(Math.abs(dx)<14&&Math.abs(dy)<14)readTap(px>innerWidth/2);
+    return;
+  }
+  readPtr=null;
   const hadPinch=!!pinch||touches.size>=2;
   endPointer(e);
   if(!lookDrag)return;
@@ -1455,7 +1464,7 @@ addEventListener('pointerup',e=>{
   const hit=scene.pick(scene.pointerX,scene.pointerY,pickPredicate);
   if(hit&&hit.hit)startPickup(hit.pickedMesh.metadata.bookIndex);
 });
-addEventListener('pointercancel',e=>{endPointer(e);lookDrag=null;});
+addEventListener('pointercancel',e=>{endPointer(e);lookDrag=null;readPtr=null;});
 addEventListener('wheel',e=>{               // 桌機滾輪縮放
   if(state==='CHOOSE'||state==='WAITDATA')
     viewZoom=clamp(viewZoom+e.deltaY*.0009,0.5,1.7);

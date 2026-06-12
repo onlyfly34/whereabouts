@@ -192,8 +192,8 @@ events:
       zh: "加薩停火與第二階段"
       en: "Gaza ceasefire, phase two"
     summary:
-      zh: "停火協議已進入第二階段，但治理、解除武裝、穩定部隊等核心難題一個都沒解開，零星交火不斷。"
-      en: "The ceasefire has reached phase two, yet none of the hard questions — governance, disarmament, a stabilization force — are resolved, and sporadic fire goes on."
+      zh: "停火撐到了第二階段，零星交火沒有停過，協議懸在半空。"
+      en: "The ceasefire has held into phase two, but sporadic fire never stopped and the deal hangs in mid-air."
     timeline:
       - date: "2023-10-07"
         art: "fire"
@@ -323,8 +323,8 @@ events:
       zh: "尹錫悅內亂案"
       en: "Yoon Suk-yeol insurrection trial"
     summary:
-      zh: "前總統尹錫悅因 2024 年底的戒嚴令一審被判無期徒刑，案件尚未走完。"
-      en: "Former president Yoon Suk-yeol was sentenced to life at first instance over his late-2024 martial law decree, but the case is not yet over."
+      zh: "前總統尹錫悅因 2024 年底的戒嚴令，一審被判無期徒刑。"
+      en: "Former president Yoon Suk-yeol was sentenced to life at first instance over his late-2024 martial law decree."
     timeline:
       - date: "2024-12-03"
         art: "troops"
@@ -405,8 +405,8 @@ events:
       zh: "H5N1 禽流感人傳人風險"
       en: "H5N1 bird flu pandemic risk"
     summary:
-      zh: "H5N1 在動物間持續擴散、零星感染人類，至今沒有出現穩定的人傳人，但風險的警報一直沒有解除。"
-      en: "H5N1 keeps spreading among animals and occasionally infects people. Sustained human-to-human spread hasn't happened — but the alarm has never been switched off."
+      zh: "H5N1 仍在動物之間流行，警報拉了兩年多，一直沒有解除。"
+      en: "H5N1 still circulates among animals; the alarm has been ringing for over two years, never switched off."
     timeline:
       - date: "2024-03-25"
         art: "virus"
@@ -471,8 +471,8 @@ events:
           name: "Balkan Insight"
           url: "https://balkaninsight.com/2026/05/14/driver-faces-attempted-murder-charge-after-car-hits-man-at-serbian-protest/bi/"
     stuck:
-      zh: "民眾要的是「誰該為這條人命負責」的答案；但抗議拖過十五個月，總統武契奇的位子仍穩，司法獨立反被一連串新法侵蝕。"
-      en: "People want an answer to who is responsible for these deaths; but fifteen months on, President Vučić's grip holds, while a string of new laws erodes judicial independence instead."
+      zh: "民眾要的是「誰該為這 16 條人命負責」的答案；但總統武契奇的位子依然穩固，司法獨立反被一連串新法侵蝕。"
+      en: "People want an answer to who is responsible for these 16 deaths; yet President Vučić's grip holds firm, while a string of new laws erodes judicial independence instead."
 
   # ──────────────────────────────────────────────
   # 海地幫派危機與過渡政府
@@ -487,8 +487,8 @@ events:
       zh: "海地幫派危機與過渡政府"
       en: "Haiti's gang crisis and transitional government"
     summary:
-      zh: "幫派幾乎掌控首都，過渡政府任期將盡，一支新的聯合國授權部隊剛剛抵達，能否扭轉局面還看不出來。"
-      en: "Gangs all but control the capital, the transitional government's mandate is running out, and a new UN-backed force has just arrived — whether it can turn the tide is still unclear."
+      zh: "幫派幾乎掌控首都，過渡政府的任期正在倒數。"
+      en: "Gangs all but control the capital, and the transitional government's mandate is counting down."
     timeline:
       - date: "2024-04-25"
         art: "talks"

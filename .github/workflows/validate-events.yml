@@ -1,0 +1,22 @@
+name: Validate events.yaml
+
+on:
+  pull_request:
+    paths:
+      - events.yaml
+      - .github/scripts/validate_events.py
+  push:
+    branches: [main]
+    paths:
+      - events.yaml
+      - .github/scripts/validate_events.py
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install PyYAML
+        run: python3 -m pip install --quiet pyyaml
+      - name: Validate
+        run: python3 .github/scripts/validate_events.py
