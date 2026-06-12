@@ -693,6 +693,19 @@ function blankFaceTex(){
   tex.update();
   return tex;
 }
+function leatherInsideFace(ev){     // 封底內裏：補頁用皮革色，避免書尾出現一張白紙
+  const cat=CATS[ev.cat];
+  const tex=newTex(), ctx=tex.getContext();
+  const g=ctx.createLinearGradient(0,0,PXW,PXH);
+  g.addColorStop(0,cat.leather[1]);g.addColorStop(1,cat.leather[0]);
+  ctx.fillStyle=g;ctx.fillRect(0,0,PXW,PXH);
+  for(let i=0;i<1200;i++){
+    ctx.fillStyle=Math.random()<.5?'rgba(0,0,0,.08)':'rgba(255,230,190,.025)';
+    ctx.fillRect(Math.random()*PXW,Math.random()*PXH,1.6,1.6);
+  }
+  tex.update();
+  return tex;
+}
 
 /* 卷宗 → faces（每張紙正反兩面，含每面 meta：來源 / 影像） */
 const faceCache={};
@@ -708,7 +721,7 @@ function getFaces(ev){
     flow.push({tex:pendingFace(),meta:{}});
   }
   flow.push({tex:endFace(ev.status==='closed'),meta:{}});
-  if(flow.length%2)flow.push({tex:blankFaceTex(),meta:{}});
+  if(flow.length%2)flow.push({tex:leatherInsideFace(ev),meta:{}});
   const faces=[{front:coverFace(ev),back:insideFace(),frontMeta:{},backMeta:{}}];
   for(let i=0;i<flow.length;i+=2){
     faces.push({front:flow[i].tex,back:flow[i+1].tex,
@@ -1012,8 +1025,9 @@ const chips=document.getElementById('chips');
 function setHint(t){hint.textContent=t;hint.classList.toggle('show',!!t);}
 
 function syncBook(){
-  const N=faces.length;
-  const hR=THICK*(N-cur)/N, hL=THICK*cur/N;
+  const N=faces.length, M=Math.max(1,N-1);          // M＝內頁張數（封面不是紙，不算進紙疊）
+  const hL=THICK*Math.max(0,cur-1)/M;
+  const hR=THICK*(cur===0?M:Math.max(0,N-cur))/M;
   stackR.setEnabled(hR>0.005); stackL.setEnabled(hL>0.005);
   stackR.scaling.y=Math.max(hR,0.001); stackL.scaling.y=Math.max(hL,0.001);
   pageR.position.y=hR+0.006; pageL.position.y=hL+0.006;
@@ -1269,19 +1283,34 @@ function startFlip(forward){
   flipping=true;
   rustle(.55);
   renderChips();
+  const N=faces.length, M=Math.max(1,N-1);
   const idx=forward?cur:cur-1;
   flipMat.setTexture('uFront',faces[idx].front);
   flipMat.setTexture('uBack',faces[idx].back);
-  flipPage.position.y=Math.max(stackL.scaling.y,stackR.scaling.y)+0.012;
-  flipPage.setEnabled(true);
+  // 翻頁期間，紙疊厚度扣掉飛行中的這張（封面不計）
+  let hL,hR;
   if(forward){
-    matR.diffuseTexture=(cur+1<faces.length)?faces[cur+1].front:BLANK;
+    hL=THICK*Math.max(0,cur-1)/M;
+    hR=THICK*Math.max(0,N-1-cur)/M;
+    if(cur+1<N){
+      matR.diffuseTexture=faces[cur+1].front;
+      pageR.setEnabled(true);
+    }else{
+      pageR.setEnabled(false);          // 最後一張：底下直接露出封底板，不墊白紙
+    }
     flipAnim={from:0,to:1,t0:performance.now(),dur:1150,after(){cur++;}};
   }else{
+    hL=THICK*Math.max(0,cur-2)/M;
+    hR=THICK*Math.max(0,N-cur)/M;
     matL.diffuseTexture=(cur-2>=0)?faces[cur-2].back:BLANK;
     pageL.setEnabled(cur-1>0);
     flipAnim={from:1,to:0,t0:performance.now(),dur:1150,after(){cur--;}};
   }
+  stackL.setEnabled(hL>0.005); stackR.setEnabled(hR>0.005);
+  stackL.scaling.y=Math.max(hL,0.001); stackR.scaling.y=Math.max(hR,0.001);
+  pageL.position.y=hL+0.006; pageR.position.y=hR+0.006;
+  flipPage.position.y=Math.max(hL,hR)+0.012;
+  flipPage.setEnabled(true);
 }
 function readTap(rightSide){
   if(flipping)return;
