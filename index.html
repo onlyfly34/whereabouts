@@ -8,11 +8,14 @@
 <meta property="og:title" content="世界的下落">
 <meta property="og:description" content="有些事沒有結局，只是沒有人再問起。推門進來，撿起一本書。">
 <meta property="og:type" content="website">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,600;1,400&family=Noto+Serif+TC:wght@400;600&display=swap" rel="stylesheet">
 <style>
   :root{ --ink:#e8ddc8; --dim:#8a7a5f; }
   *{margin:0;padding:0;box-sizing:border-box}
   html,body{height:100%;overflow:hidden;background:#0b0805}
-  body{font-family:"Noto Serif TC","Songti TC","PMingLiU",Georgia,serif;color:var(--ink);
+  body{font-family:"EB Garamond","Noto Serif TC","Songti TC","PMingLiU",Georgia,serif;color:var(--ink);
        -webkit-tap-highlight-color:transparent;touch-action:none}
   #stage{position:fixed;inset:0}
   #stage canvas{width:100%;height:100%;display:block;outline:none}
@@ -27,10 +30,13 @@
     justify-content:center;gap:22px;transition:opacity 1.4s ease;
     text-shadow:0 0 24px rgba(0,0,0,.9);cursor:pointer;padding:0 24px;text-align:center}
   #intro.gone{opacity:0;pointer-events:none}
-  #intro h1{font-size:clamp(40px,8vw,72px);font-weight:600;letter-spacing:.4em;text-indent:.4em;color:#f0e4ca}
+  #intro h1{font-size:clamp(40px,8vw,72px);font-weight:600;letter-spacing:.4em;text-indent:.4em;color:#f0e4ca;
+    transition:opacity 1s ease}
   body[data-lang="en"] #intro h1{font-size:clamp(26px,6vw,54px);letter-spacing:.18em;text-indent:.18em}
-  #intro .line{font-size:15px;letter-spacing:.18em;color:#b3a382;line-height:2;min-height:4em}
+  #intro .line{font-size:clamp(16px,4.4vw,21px);letter-spacing:.18em;color:#cdbd99;line-height:2;
+    min-height:2em;transition:opacity 1s ease}
   body[data-lang="en"] #intro .line{letter-spacing:.06em}
+  #intro .faded{opacity:0}
   @keyframes breathe{0%,100%{opacity:.45}50%{opacity:.95}}
 
   #hint{position:fixed;left:0;right:0;bottom:24px;text-align:center;font-size:12px;
@@ -85,7 +91,7 @@
     border:1px solid rgba(138,122,95,.45);border-radius:3px;padding:7px 16px;
     background:rgba(12,8,4,.6)}
 
-  @media (prefers-reduced-motion: reduce){ #intro p.go,#hint.show{animation:none} }
+  @media (prefers-reduced-motion: reduce){ #hint.show{animation:none} }
 </style>
 </head>
 <body>
@@ -100,7 +106,7 @@
 
 <div id="intro">
   <h1 id="intro-title">世界的下落</h1>
-  <div class="line"><span id="intro-line1"></span><br><span id="intro-line2"></span></div>
+  <div class="line" id="intro-line"></div>
 </div>
 <div id="hint"></div>
 <div id="folio"></div>
@@ -142,7 +148,6 @@ const STRINGS = {
   introTitle:   {zh:'世界的下落', en:'WHEREABOUTS'},
   introLine1:   {zh:'有些事沒有結局，', en:'Some things never got an ending,'},
   introLine2:   {zh:'只是沒有人再問起。', en:'people just stopped asking.'},
-  hintChoose:   {zh:n=>`地上散著 ${n} 本書 · 撿起一本`, en:n=>`${n} books lie on the floor · pick one up`},
   hintRead:     {zh:'點擊右側翻頁 · 左側回翻', en:'Tap right to turn the page · left to go back'},
   hintReadPort: {zh:'點右側往下讀 · 左側回看', en:'Tap right to read on · left to look back'},
   loading:      {zh:'書房還在整理…', en:'Tidying the room…'},
@@ -209,8 +214,11 @@ async function loadData(){
       e.staleDays = days(e.last, TODAY);
       e.dust = e.staleDays>=365?4:e.staleDays>=180?3:e.staleDays>=90?2:e.staleDays>=30?1:0;
     });
+    // 把兩種語言會用到的所有文字餵給字體載入器（unicode-range 子集才會被抓下來）
+    const gather=v=>v==null?'':(typeof v==='object'?Object.values(v).map(gather).join(''):String(v));
+    await ensureFonts(gather(EVENTS)+gather(STRINGS)+'0123456789');
     buildFloor();
-    if(state==='WAITDATA'){state='CHOOSE';setHint(S('hintChoose',EVENTS.length));}
+    if(state==='WAITDATA'){state='CHOOSE';setHint('');}
   }catch(err){
     DATA_ERR=err.message;
     if(state==='WAITDATA')setHint(S('loadFail',DATA_ERR));
@@ -221,7 +229,17 @@ async function loadData(){
 /* ---------------- 常數 / 引擎 ---------------- */
 const PW=3.0, PH=4.05, THICK=0.26, TH2=THICK+0.1;
 const PXW=880, PXH=1180;
-const FONT=`"Noto Serif TC","Songti TC","PMingLiU",Georgia,serif`;
+/* 拉丁字母用 EB Garamond（文藝襯線）、CJK 落到 Noto Serif TC（webfont，手機也一致） */
+const FONT=`"EB Garamond","Noto Serif TC","Songti TC","PMingLiU",Georgia,serif`;
+/* canvas 不會自己觸發 webfont 載入：把實際會畫的字餵給 fonts.load，載好才畫紋理 */
+async function ensureFonts(sample){
+  if(!document.fonts||!document.fonts.load)return;
+  const reqs=[];
+  for(const f of ['400 40px "Noto Serif TC"','600 64px "Noto Serif TC"',
+                  '400 40px "EB Garamond"','600 64px "EB Garamond"'])
+    reqs.push(document.fonts.load(f,sample).catch(()=>{}));
+  await Promise.race([Promise.all(reqs),new Promise(r=>setTimeout(r,4000))]);
+}
 
 const stage=document.getElementById('stage');
 const canvas=document.createElement('canvas');
@@ -230,7 +248,7 @@ let engine;
 try{
   engine=new BABYLON.Engine(canvas,true,{stencil:false});
 }catch(err){
-  document.getElementById('intro-line1').innerHTML=
+  document.getElementById('intro-line').innerHTML=
     '這個頁面需要 WebGL。This page needs WebGL. — <a href="events.yaml" style="color:#cdbd99">events.yaml</a>';
   throw err;
 }
@@ -1062,8 +1080,9 @@ function applyDom(){
   document.body.dataset.lang=LANG;
   document.getElementById('intro-title').textContent=S('introTitle');
   if(typing)finishTyping();
-  document.getElementById('intro-line1').textContent=introStage>=1?S('introLine1'):'';
-  document.getElementById('intro-line2').textContent=introStage>=2?S('introLine2'):'';
+  if(!introBusy)
+    document.getElementById('intro-line').textContent=
+      introStage===1?S('introLine1'):introStage===2?S('introLine2'):'';
   downBtn.textContent=S('putBack');
   vlink.textContent=S('vOpen');
   document.getElementById('vclose').textContent=S('vClose');
@@ -1094,8 +1113,7 @@ function setLang(l){
     rigNoteMat.diffuseTexture=noteTexOf(EVENTS[activeBook]);
     syncBook();renderChips();
   }
-  if(state==='CHOOSE')setHint(S('hintChoose',EVENTS.length));
-  else if(state==='WAITDATA')setHint(DATA_ERR?S('loadFail',DATA_ERR):S('loading'));
+  if(state==='WAITDATA')setHint(DATA_ERR?S('loadFail',DATA_ERR):S('loading'));
 }
 document.querySelectorAll('#lang button').forEach(b=>{
   b.addEventListener('pointerdown',e=>e.stopPropagation());
@@ -1105,6 +1123,8 @@ document.querySelectorAll('#lang button').forEach(b=>{
 /* ---------------- 相機 ---------------- */
 const camPos=new BABYLON.Vector3(0,7.6,18);
 const camLook=new BABYLON.Vector3(0,4,0);
+const WALK_FROM_POS=new BABYLON.Vector3(0,7.6,18);
+const WALK_FROM_LOOK=new BABYLON.Vector3(0,4.2,0.8);
 const tgtPos=camPos.clone(), tgtLook=camLook.clone();
 const aspect=()=>engine.getRenderWidth()/engine.getRenderHeight();
 const isPortrait=()=>aspect()<0.9;
@@ -1128,7 +1148,7 @@ function readCamTargets(){
 }
 function chooseCamTargets(){
   const tanV=Math.tan(camera.fov/2), tanH=tanV*aspect();
-  const d=Math.max(7.4/tanH, 3.0/tanV, 7.6);
+  const d=Math.max(7.4/tanH, 3.0/tanV, 7.6)*viewZoom;
   const dir=new BABYLON.Vector3(Math.sin(viewYaw),.62+viewPitch,Math.cos(viewYaw)).normalize();
   tgtPos.set(0,0.6,1.2).addInPlace(dir.scale(d));
   tgtLook.set(0,0.4,0.8);
@@ -1141,28 +1161,58 @@ function startWalk(){
   document.getElementById('intro').classList.add('gone');
   walkT=0;
 }
-/* 序言：點一下打一句（打字機），打完再點才前進 */
+/* 序言：點一下 → 上一句先淡出 → 打字機打出下一句；打完再點才前進 */
+let introBusy=false;
+const introTitleEl=document.getElementById('intro-title');
+const introLineEl=document.getElementById('intro-line');
+const PAUSE_CH='，。、；：？！…—,.;:?!';
 function typeText(el,text){
   el.textContent='';
+  if(REDUCED){el.textContent=text;return;}
   let i=0;
-  typing={el,text,timer:setInterval(()=>{
+  const step=()=>{
     i++;
     el.textContent=text.slice(0,i);
-    if(i>=text.length){clearInterval(typing.timer);typing=null;}
-  },REDUCED?0:(LANG==='en'?40:90))};
-  if(REDUCED)finishTyping();
+    if(i>=text.length){typing=null;return;}
+    let d=LANG==='en' ? 60+Math.random()*110 : 150+Math.random()*180;  // 真人打字：速度不均
+    if(PAUSE_CH.includes(text[i-1])) d+=420+Math.random()*380;          // 標點後自然停頓
+    else if(Math.random()<.08) d+=200+Math.random()*260;                // 偶爾想一下
+    typing.timer=setTimeout(step,d);
+  };
+  typing={el,text,timer:setTimeout(step,300+Math.random()*250)};
 }
 function finishTyping(){
   if(!typing)return;
-  clearInterval(typing.timer);
+  clearTimeout(typing.timer);
   typing.el.textContent=typing.text;
   typing=null;
 }
+function fadeThen(el,cb){
+  if(REDUCED){el.classList.add('faded');cb();return;}
+  el.classList.add('faded');
+  setTimeout(cb,1050);
+}
+function resetLine(){                 // 淡出後瞬間恢復不透明（避免下一句跟著淡入）
+  introLineEl.style.transition='none';
+  introLineEl.classList.remove('faded');
+  introLineEl.textContent='';
+  void introLineEl.offsetWidth;
+  introLineEl.style.transition='';
+}
 function introTap(){
+  if(introBusy)return;                        // 淡出中，等它演完
   if(typing){finishTyping();return;}          // 打到一半：先補完整句
-  if(introStage===0){introStage=1;typeText(document.getElementById('intro-line1'),S('introLine1'));}
-  else if(introStage===1){introStage=2;typeText(document.getElementById('intro-line2'),S('introLine2'));}
-  else startWalk();
+  if(introStage===0){
+    introStage=1; introBusy=true;
+    fadeThen(introTitleEl,()=>{
+      introTitleEl.style.display='none';     // 退出排版流，讓句子回到正中央
+      introBusy=false;
+      typeText(introLineEl,S('introLine1'));
+    });
+  }else if(introStage===1){
+    introStage=2; introBusy=true;
+    fadeThen(introLineEl,()=>{resetLine();introBusy=false;typeText(introLineEl,S('introLine2'));});
+  }else startWalk();
 }
 function startPickup(i){
   state='PICKUP';
@@ -1310,17 +1360,28 @@ function footstep(){
 const mouse={x:0,y:0};
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 let hovered=null;
-let viewYaw=0, viewPitch=0;          // 房間內拖曳視角
-let lookDrag=null;
+let viewYaw=0, viewPitch=0, viewZoom=1;   // 房間內：拖曳旋轉（yaw 不設限＝360°）＋縮放
+let lookDrag=null, pinch=null;
+const touches=new Map();                  // 進行中的觸點（雙指縮放用）
+const touchDist=()=>{
+  const p=[...touches.values()];
+  return Math.hypot(p[0].x-p[1].x,p[0].y-p[1].y);
+};
 addEventListener('pointermove',e=>{
   mouse.x=(e.clientX/innerWidth)*2-1;
   mouse.y=(e.clientY/innerHeight)*2-1;
+  if(touches.has(e.pointerId)){touches.set(e.pointerId,{x:e.clientX,y:e.clientY});}
+  if(pinch&&touches.size===2){
+    const d=touchDist();
+    if(d>0)viewZoom=clamp(pinch.z0*pinch.d0/d,0.5,1.7);
+    return;
+  }
   if(lookDrag&&(state==='CHOOSE'||state==='WAITDATA')){
     const dx=e.clientX-lookDrag.x, dy=e.clientY-lookDrag.y;
     if(Math.abs(e.clientX-lookDrag.x0)+Math.abs(e.clientY-lookDrag.y0)>8)lookDrag.moved=true;
     if(lookDrag.moved){
-      viewYaw  =clamp(viewYaw  - dx*.0032, -.65,.65);
-      viewPitch=clamp(viewPitch+ dy*.0022, -.22,.40);
+      viewYaw  -=dx*.0032;                          // 不夾限：可 360° 環視
+      viewPitch =clamp(viewPitch+dy*.0022,-.22,.45);
       lookDrag.x=e.clientX;lookDrag.y=e.clientY;
     }
     return;
@@ -1337,23 +1398,39 @@ addEventListener('pointermove',e=>{
 addEventListener('pointerdown',e=>{
   if(vmodal.classList.contains('show'))return;
   if(e.target.closest&&e.target.closest('.chip,#down,#lang'))return;
-  if(state==='INTRO'){introTap();return;}
   if(state==='CHOOSE'||state==='WAITDATA'){
+    touches.set(e.pointerId,{x:e.clientX,y:e.clientY});
+    if(touches.size===2){                 // 第二指落下 → 進入雙指縮放
+      lookDrag=null;
+      pinch={d0:touchDist(),z0:viewZoom};
+      return;
+    }
     lookDrag={x:e.clientX,y:e.clientY,x0:e.clientX,y0:e.clientY,moved:false};
     return;
   }
+  if(state==='INTRO'){introTap();return;}
   if(state==='READ'){readTap(e.clientX>innerWidth/2);}
 });
+function endPointer(e){
+  touches.delete(e.pointerId);
+  if(touches.size<2)pinch=null;
+}
 addEventListener('pointerup',e=>{
+  const hadPinch=!!pinch||touches.size>=2;
+  endPointer(e);
   if(!lookDrag)return;
   const wasDrag=lookDrag.moved;
   lookDrag=null;
-  if(wasDrag||state!=='CHOOSE')return;
+  if(wasDrag||hadPinch||state!=='CHOOSE')return;
   if(vmodal.classList.contains('show'))return;
   const hit=scene.pick(scene.pointerX,scene.pointerY,pickPredicate);
   if(hit&&hit.hit)startPickup(hit.pickedMesh.metadata.bookIndex);
 });
-addEventListener('pointercancel',()=>{lookDrag=null;});
+addEventListener('pointercancel',e=>{endPointer(e);lookDrag=null;});
+addEventListener('wheel',e=>{               // 桌機滾輪縮放
+  if(state==='CHOOSE'||state==='WAITDATA')
+    viewZoom=clamp(viewZoom+e.deltaY*.0009,0.5,1.7);
+},{passive:true});
 addEventListener('keydown',e=>{
   if(vmodal.classList.contains('show')){if(e.key==='Escape')closeVideo();return;}
   if(state==='INTRO'&&(e.key===' '||e.key==='Enter')){introTap();return;}
@@ -1378,14 +1455,19 @@ engine.runRenderLoop(()=>{
     walkT+=0.016/3.4;
     const e=easeInOut(Math.min(walkT,1));
     const bob=Math.sin(walkT*3.4*PI*2.2);
-    tgtPos.set(Math.sin(walkT*3.4*PI*1.1)*.14, 7.6+(REDUCED?0:bob*.14*(1-e*.5)), 18-(18-8.6)*e);
-    tgtLook.set(0, 4.2-(4.2-0.6)*e, 0.8);
+    chooseCamTargets();                          // 終點＝房間視角，一次到位不回拉
+    BABYLON.Vector3.LerpToRef(WALK_FROM_POS,tgtPos,e,tgtPos);
+    BABYLON.Vector3.LerpToRef(WALK_FROM_LOOK,tgtLook,e,tgtLook);
+    if(!REDUCED){
+      tgtPos.x+=Math.sin(walkT*3.4*PI*1.1)*.14*(1-e);
+      tgtPos.y+=bob*.14*(1-e);
+    }
     if(!REDUCED&&bob<-.85&&lastStepPhase>=-.85)footstep();
     lastStepPhase=bob;
     if(walkT>=1){
       if(EVENTS.length){
         state='CHOOSE';
-        setHint(S('hintChoose',EVENTS.length));
+        setHint('');
       }else{
         state='WAITDATA';
         setHint(DATA_ERR?S('loadFail',DATA_ERR):S('loading'));
@@ -1430,7 +1512,7 @@ engine.runRenderLoop(()=>{
         startTear();           // 到手 → 撕便條
       }else{
         state='CHOOSE';
-        setHint(S('hintChoose',EVENTS.length));
+        setHint('');
       }
       pickupAnim=null;
     }
